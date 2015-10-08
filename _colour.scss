@@ -1,0 +1,111 @@
+//
+// Default colours based on Googles Material Design
+//
+$colours: map-merge($colours, (
+  'red': #F44336,
+  'pink': #E91E63,
+  'purple': #9C27B0,
+  'deep-purple': #673AB7,
+  'indigo': #3F51B5,
+  'blue': #2196F3,
+  'light-blue': #03A9F4,
+  'cyan': #00BCD4,
+  'teal': #009688,
+  'green': #4CAF50,
+  'light-green': #8BC34A,
+  'lime': #CDDC39,
+  'yellow': #FFEB3B,
+  'amber': #FFC107,
+  'orange': #FF9800,
+  'deep-orange': #FF5722,
+  'brown': #795548,
+  'grey': #9E9E9E,
+  'blue-grey': #607D8B,
+  'black': #000,
+  'white': #fff,
+));
+
+//
+// The only function that really matters.
+//
+@function colour($name){
+  $color: map-get($colours, $name);
+
+  @if $color {
+    @return $color;
+  }
+
+  @error "#{$name} is not defined in $colours.";
+}
+
+//
+// Helper functions to allow you to use the colour name with the
+// default sass functions.
+//
+// I would love to find away to reduce this as it feels like a lot of crud
+// just for the sake of it.
+//
+@function colour-darken($name, $percentage){
+  @return darken( colour($name), $percentage );
+}
+
+@function colour-lighten($name, $percentage){
+  @return lighten( colour($name), $percentage );
+}
+
+@function colour-saturate($name, $percentage){
+  @return saturate( colour($name), $percentage );
+}
+
+@function colour-desaturate($name, $percentage){
+  @return desaturate( colour($name), $percentage );
+}
+
+@function colour-adjust-hue($name, $percentage){
+  @return adjust-hue( colour($name), $percentage );
+}
+
+@function colour-tint($name, $percentage){
+  @return tint( colour($name), $percentage );
+}
+
+@function colour-shade($name, $percentage){
+  @return shade( colour($name), $percentage );
+}
+
+@function colour-rgba($name, $value){
+  @return rgba( colour($name), $value );
+}
+
+@function colour-opacity($name, $value){
+  @return colour-rgba($name, $value);
+}
+
+//
+// Material Design Colour Accents
+// http://www.google.com/design/spec/style/color.html#
+// We don't support the Ax00 colours atm for the sake of simplicity: em
+//
+@function colour-accent($name, $accent){
+  $accents: (
+    50: 4,
+    100: 8,
+    200: 12,
+    300: 16,
+    400: 20,
+    600: 4,
+    700: 8,
+    800: 12,
+    900: 16
+  );
+
+  @if $accent < 500 {
+    @return colour-lighten($name, map-get($accents, $accent));
+  }
+
+  @if $accent > 500 {
+    @return colour-darken($name, map-get($accents, $accent));
+  }
+
+  @return colour($name);
+}
