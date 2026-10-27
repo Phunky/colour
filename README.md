@@ -27,9 +27,33 @@ The original `_colour.scss` is still available for existing projects. The new [`
 }
 ```
 
+### `currentColor`
+
+Every function accepts `currentColor` as well as the 21 palette names. `--colour(currentColor)` resolves to the native `currentColor` keyword, and derived colours stay **dynamic**: they follow the element’s computed `color` property (including when it changes on `:hover` or via inheritance).
+
+```css
+.link {
+  color: --colour(teal);
+}
+.link:hover {
+  color: --colour-darken(teal, 8);
+}
+.badge {
+  color: --colour(purple);
+  background: --colour-tint(currentColor, 88%);
+  border: 1px solid --colour-shade(currentColor, 25%);
+}
+.icon {
+  color: inherit;
+  fill: --colour-accent(currentColor, 600);
+}
+```
+
+The Safari-compatible demo build preserves `currentColor` in generated CSS (it is not baked down to a static hex). Select **currentColor** in the playground and use the ink controls to change inherited text colour without JavaScript.
+
 ## Features
 
-- 21 Material-inspired named colours, defined in one native CSS function.
+- 21 Material-inspired named colours, defined in one native CSS function, plus `currentColor` for inherited colour.
 - 11 functions: colour lookup, lighten, darken, saturate, desaturate, adjust hue, tint, shade, RGBA, opacity, and accents.
 - 11 accent levels: 50–1000 (500 is the original base colour).
 - Fully interactive responsive demo: choosing a colour changes every swatch, transformation, accent and component with CSS `:has()` — **no browser JavaScript**.

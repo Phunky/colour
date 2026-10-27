@@ -12,8 +12,9 @@
  */
 
 /* Original Material Design base palette. No :root variable duplication. */
-@function --colour(--name <custom-ident>) returns <color> {
+@function --colour(--name <custom-ident> | currentColor) returns <color> {
   result: if(
+    style(--name: currentColor): currentColor;
     style(--name: red): #f44336;
     style(--name: pink): #e91e63;
     style(--name: purple): #9c27b0;
@@ -39,46 +40,46 @@
   );
 }
 
-@function --colour-lighten(--name <custom-ident>, --points <number>) returns <color> {
+@function --colour-lighten(--name <custom-ident> | currentColor, --points <number>) returns <color> {
   result: hsl(from --colour(var(--name)) h s clamp(0, calc(l + var(--points)), 100) / alpha);
 }
 
-@function --colour-darken(--name <custom-ident>, --points <number>) returns <color> {
+@function --colour-darken(--name <custom-ident> | currentColor, --points <number>) returns <color> {
   result: hsl(from --colour(var(--name)) h s clamp(0, calc(l - var(--points)), 100) / alpha);
 }
 
-@function --colour-saturate(--name <custom-ident>, --points <number>) returns <color> {
+@function --colour-saturate(--name <custom-ident> | currentColor, --points <number>) returns <color> {
   result: hsl(from --colour(var(--name)) h clamp(0, calc(s + var(--points)), 100) l / alpha);
 }
 
-@function --colour-desaturate(--name <custom-ident>, --points <number>) returns <color> {
+@function --colour-desaturate(--name <custom-ident> | currentColor, --points <number>) returns <color> {
   result: hsl(from --colour(var(--name)) h clamp(0, calc(s - var(--points)), 100) l / alpha);
 }
 
-@function --colour-adjust-hue(--name <custom-ident>, --degrees <number>) returns <color> {
+@function --colour-adjust-hue(--name <custom-ident> | currentColor, --degrees <number>) returns <color> {
   result: hsl(from --colour(var(--name)) calc(h + var(--degrees)) s l / alpha);
 }
 
 /* tint/shade use sRGB interpolation rather than HSL lightness adjustment. */
-@function --colour-tint(--name <custom-ident>, --weight <percentage>) returns <color> {
+@function --colour-tint(--name <custom-ident> | currentColor, --weight <percentage>) returns <color> {
   result: color-mix(in srgb, --colour(var(--name)), white var(--weight));
 }
 
-@function --colour-shade(--name <custom-ident>, --weight <percentage>) returns <color> {
+@function --colour-shade(--name <custom-ident> | currentColor, --weight <percentage>) returns <color> {
   result: color-mix(in srgb, --colour(var(--name)), black var(--weight));
 }
 
-@function --colour-rgba(--name <custom-ident>, --alpha <number>) returns <color> {
+@function --colour-rgba(--name <custom-ident> | currentColor, --alpha <number>) returns <color> {
   result: rgb(from --colour(var(--name)) r g b / var(--alpha));
 }
 
-@function --colour-opacity(--name <custom-ident>, --alpha <number>) returns <color> {
+@function --colour-opacity(--name <custom-ident> | currentColor, --alpha <number>) returns <color> {
   result: --colour-rgba(var(--name), var(--alpha));
 }
 
 /* Original repo's HSL point shifts for Material-style accent weights.
    500 is the base colour, 1000 is its nonstandard extra-dark shade. */
-@function --colour-accent(--name <custom-ident>, --level <integer>) returns <color> {
+@function --colour-accent(--name <custom-ident> | currentColor, --level <integer>) returns <color> {
   --offset: if(
     style(--level: 50): 36;
     style(--level: 100): 34;

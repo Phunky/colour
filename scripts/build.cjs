@@ -55,6 +55,7 @@ const known = new Set(['colour','colour-lighten','colour-darken','colour-saturat
   'colour-desaturate','colour-adjust-hue','colour-tint','colour-shade',
   'colour-rgba','colour-opacity','colour-accent']);
 function resolveName(name) {
+  if (name === 'currentColor') return 'currentColor';
   if (name === 'var(--active)') return 'var(--colour-active)';
   if (name === 'var(--token)') return 'var(--colour-selected-swatch)';
   const colour = palette.get(name);
@@ -117,7 +118,9 @@ const compatOutput = [
   '/* The following declarations are derived from the single native palette source. */',
   'main { --colour-active: ' + palette.get('blue') + '; }',
   ...[...palette].map(([name,hex]) => `main:has(#tone-${name}:checked) { --colour-active: ${hex}; }`),
+  'main:has(#tone-currentColor:checked) { --colour-active: currentColor; }',
   ...[...palette].map(([name,hex]) => `#tone-${name} + .tone-dot { --colour-selected-swatch: ${hex}; }`),
+  '#tone-currentColor + .tone-dot { --colour-selected-swatch: currentColor; }',
   compat.toString()
 ].join('\n');
 if (compat.nodes.some(n => n.type === 'atrule' && n.name === 'function') || /\bif\s*\(style\(|--colour(?:-[a-z-]+)?\(/.test(compatOutput)) throw Error('Untransformed custom function in CSS compat output');
@@ -163,3 +166,5 @@ write('dist/index-native.html',buildHTML('native'));
 write('dist/standalone-compatible.html',buildHTML('compat',true).replace('href="index-native.html"','href="index-native.html"'));
 write('dist/standalone-native.html',buildHTML('native',true));
 console.log(`Built CSS/HTML for ${palette.size} colours and ${accent.size} accents; compatibility CSS has no native custom-function calls.`);
+
+module.exports = { transformFunction, replaceCalls, palette };

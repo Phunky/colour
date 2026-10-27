@@ -25,6 +25,14 @@ main:has(#tone-grey:checked) { --active: grey; }
 main:has(#tone-blue-grey:checked) { --active: blue-grey; }
 main:has(#tone-black:checked) { --active: black; }
 main:has(#tone-white:checked) { --active: white; }
+main:has(#tone-currentColor:checked) { --active: currentColor; }
+main:has(#tone-currentColor:checked) { color: #2196f3; }
+main:has(#tone-currentColor:checked):has(#ink-red:checked) { color: #f44336; }
+main:has(#tone-currentColor:checked):has(#ink-pink:checked) { color: #e91e63; }
+main:has(#tone-currentColor:checked):has(#ink-purple:checked) { color: #9c27b0; }
+main:has(#tone-currentColor:checked):has(#ink-blue:checked) { color: #2196f3; }
+main:has(#tone-currentColor:checked):has(#ink-teal:checked) { color: #009688; }
+main:has(#tone-currentColor:checked):has(#ink-amber:checked) { color: #ffc107; }
 @function --native-supported() { result: none; }
 .support-warning { display: block; padding: 15px 22px; font-size: 14px; color: #683600; background: #fff4d6; border-bottom: 1px solid #f0d69a; }
 .support-warning { display: --native-supported(); }
@@ -86,6 +94,14 @@ h1 span { color: #778ca0; }
 .tone-option:focus-within { outline: 2px solid #1978ba; outline-offset:2px; }
 .tone-option input { position:absolute; opacity:0; width:1px; height:1px; }
 .tone-dot { display:block; width: 25px; height: 25px; border-radius:50%; background: --colour(var(--token)); box-shadow: 0 1px 3px #142d3a23, 0 0 0 1px #152e3a16; }
+.tone-option-current .tone-dot { background: linear-gradient(135deg, #e91e63 40%, #2196f3 60%); }
+.ink-controls { display: none; margin-top: 18px; padding-top: 16px; border-top: 1px solid #edf0f3; }
+main:has(#tone-currentColor:checked) .ink-controls { display: block; }
+.ink-options { display: flex; flex-wrap: wrap; gap: 8px; }
+.ink-option { cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #e8edf1; border-radius: 999px; background: #fff; font-size: 11px; font-weight: 600; color: #586a79; }
+.ink-option:has(input:checked) { border-color: #76acd8; background: #f0f8ff; box-shadow: inset 0 0 0 1px #76acd8; }
+.ink-option input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ink-chip { width: 14px; height: 14px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 1px #152e3a16; }
 .tone-name { width:100%; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:center; font-size: 9px; font-weight: 600; color:#586a79; }
 .palette-footnote { border-top: 1px solid #edf0f3; padding-top: 16px; margin-top: 20px; color: #7f909d; font-size:11px; line-height:1.55; }
 .palette-footnote code { color:#327cac; }
