@@ -22,7 +22,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .section-lead { margin-top: 8px; color: #5b6876; max-width: 560px; }
 h3 { font-size: 15px; letter-spacing: -.2px; }
 /* Hero */
-.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; padding: 64px 0 88px; }
+.hero { padding: 64px 0 88px; }
 .eyebrow { font-size: 13px; font-weight: 600; color: #5b6876; }
 h1 { font-size: clamp(40px, 5.6vw, 64px); line-height: 1.04; letter-spacing: -2.4px; margin: 14px 0 18px; }
 h1 span { color: #8a96a3; }
@@ -32,9 +32,6 @@ h1 span { color: #8a96a3; }
 .action:hover { border-color: #18212b; }
 .action-primary { background: #18212b; color: #fff; border-color: #18212b; }
 .action-primary:hover { background: #33414f; }
-.hero-example { display: grid; gap: 14px; }
-.alert { border: 1px solid; border-left-width: 4px; border-radius: 10px; padding: 14px 16px; font-weight: 600; font-size: 14px; }
-.alert { background: --colour-tint(85%, red); border-color: --colour(red); color: --colour-shade(45%, red); }
 /* Playground: --active, --on-active and --name follow the selected palette colour. */
 @property --on-active { syntax: '<color>'; inherits: true; initial-value: #000; }
 main { --active: --colour(blue); --on-active: --colour-contrast(blue); --name: "blue"; }
@@ -134,6 +131,6 @@ main:has(#scheme-dark:checked) .stage { color-scheme: dark; }
 /* The compiled demo needs an explicit hover foreground on older browsers. */
 @supports not (color: contrast-color(red)) { .button:is(:hover, :focus-visible) { color: #fff; } }
 .footer { padding-top: 28px; padding-bottom: 40px; border-top: 1px solid #eceff2; font-size: 13px; color: #6b7785; }
-@media (max-width: 860px) { .hero, .playground, .compose { grid-template-columns: 1fr; } .preview { position: static; } .hero { gap: 36px; padding-top: 40px; } .current { grid-template-columns: 1fr; } .current .code { grid-row: auto; } }
+@media (max-width: 860px) { .playground, .compose { grid-template-columns: 1fr; } .preview { position: static; } .hero { padding-top: 40px; } .current { grid-template-columns: 1fr; } .current .code { grid-row: auto; } }
 @media (max-width: 520px) { .site-header, main, .footer { padding-left: 18px; padding-right: 18px; } .site-header { flex-direction: column; align-items: flex-start; } .section { padding: 52px 0; } .preview { min-height: 260px; padding: 22px; } .preview-name { font-size: 36px; } .code { font-size: 11.5px; padding: 12px; } .palette { gap: 8px; } .scale-steps { gap: 3px; } .scale-steps li { font-size: 9px; } .scale-steps i { height: 40px; border-radius: 6px; } }
 @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } .palette-option { transition: none; } }
