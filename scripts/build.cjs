@@ -8,37 +8,16 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const postcss = require('postcss');
-const { createCompiler, contrastReport } = require('./compiler.cjs');
+const { createCompiler } = require('./compiler.cjs');
 
 const root = path.resolve(__dirname, '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const write = (p, v) => fs.writeFileSync(path.join(root, p), v, 'utf8');
 const colourSource = read('src/colour.css');
 const demoSource = read('src/demo.css');
-const { compileValue, compileFallback, usesContrast, staticColour, palette, accent } = createCompiler(colourSource);
+const { compileValue, compileFallback, usesContrast, palette, accent } = createCompiler(colourSource);
 
-/*
- * Accessibility table: one row per palette colour (plus a translucent example),
- * with the WCAG 2.x ratio of the background and the black/white text that
- * contrast-color() picks. Nothing is hand-written; uncomputable rows say why.
- */
-const A11Y_EXTRA = ['--colour-opacity(0.6, indigo)'];
-const truncate = ratio => (Math.floor(ratio * 100) / 100).toFixed(2);
-function accessibilityRows() {
-  return [...palette.keys(), ...A11Y_EXTRA].map(background => {
-    const expr = background.startsWith('--') ? background : `--colour(${background})`;
-    const report = contrastReport(staticColour(expr));
-    const swatch = `<span class="a11y-sample" style="background: ${expr}; color: --colour-contrast(${background});">${palette.has(background) ? background : 'translucent'}</span>`;
-    const name = palette.has(background) ? `<code>${background}</code> <code>${palette.get(background)}</code>` : `<code>${background}</code>`;
-    const verdict = pass => `<span class="${pass ? 'a11y-pass' : 'a11y-fail'}">${pass ? 'Pass' : 'Fail'}</span>`;
-    const cells = report.ratio === undefined
-      ? `<td>—</td><td colspan="3"><span class="a11y-unknown">Not computed (${report.reason})</span></td>`
-      : `<td><span class="a11y-ink" style="background: ${report.text};"></span>${report.text === '#fff' ? 'white' : 'black'} <code>${report.text}</code></td><td>${truncate(report.ratio)}:1</td><td>${verdict(report.aa)}</td><td>${verdict(report.aaa)}</td>`;
-    const data = report.ratio === undefined ? '' : ` data-text="${report.text}" data-ratio="${report.ratio}"`;
-    return `<tr data-background="${background}"${data}><td>${swatch}</td><td>${name}</td>${cells}</tr>`;
-  }).join('\n');
-}
-const htmlSource = replaceOnce(read('src/index.html'), '<!-- build:accessibility -->', () => accessibilityRows());
+const htmlSource = read('src/index.html');
 const CONTRAST_SUPPORTS = '(color: contrast-color(red))';
 
 /*
@@ -108,9 +87,10 @@ function compileInlineStyles(html) {
 }
 
 function replaceOnce(html, search, replacement) {
-  const next = html.replace(search, replacement);
-  if (next === html) throw Error(`HTML template is missing expected content: ${search}`);
-  return next;
+  if (typeof search === 'string' ? !html.includes(search) : !search.test(html)) {
+    throw Error(`HTML template is missing expected content: ${search}`);
+  }
+  return html.replace(search, replacement);
 }
 
 // Both HTML modes use exactly the same DOM, varying only which stylesheet loads.
@@ -122,23 +102,11 @@ function buildHTML(mode, inline = false) {
     : sheets.map(p => `<link rel="stylesheet" href="${p}">`).join('\n  ');
   let html = compatMode ? compileInlineStyles(htmlSource) : htmlSource;
   html = replaceOnce(html, /  <link rel="stylesheet" href="colour\.css">\s*<link rel="stylesheet" href="demo\.css">/, () => `  ${styles}`);
-  html = replaceOnce(html, /<div class="support-warning" role="note">[^]*?<\/div>/, compatMode
-    ? '<div class="support-warning" role="note"><strong>Compatibility CSS:</strong> This build works without native <code>@function</code> or <code>if()</code>. Try every swatch, transformation and composition on iOS Safari. <a href="index-native.html">View native build</a>.</div>'
-    : '<div class="support-warning" role="note"><strong>Native CSS:</strong> This build requires <code>@function</code> and <code>if()</code> (Chrome/Edge 139+). <a href="index.html">Use Safari-compatible build</a>.</div>');
-  if (compatMode) {
-    html = replaceOnce(html, 'A pure CSS playground for colour, an experimental native CSS colour function library.',
-      'A CSS-only playground for colour, including a WebKit-compatible build of native functions.');
-    html = replaceOnce(html, 'The styling is powered entirely by native functions.',
-      'The styling uses build-time compiled functions, with no browser-side JavaScript.');
-    html = replaceOnce(html, 'The complete colour toolkit, rebuilt around native CSS functions. One source of truth. Every shade computed by the browser. No Sass, no JavaScript.',
-      'The complete colour toolkit, built from native CSS functions. One palette source, a compatibility build, and every shade still computed by CSS. No Sass or browser JavaScript.');
-    html = replaceOnce(html, '0 JavaScript · Single source of colour truth · Requires CSS custom functions',
-      '0 browser JavaScript · Single palette source · Safari-compatible CSS');
-    html = replaceOnce(html, '<span class="brand-name">colour<span> / native CSS</span></span>',
-      '<span class="brand-name">colour<span> / compatible CSS</span></span>');
-    html = replaceOnce(html, '<span class="eyebrow-pill">:has() + @function</span>',
-      '<span class="eyebrow-pill">:has() + build-time compiler</span>');
-  }
+  // Only the native build can be unsupported, so only it keeps the warning.
+  html = replaceOnce(html, /<div class="support-warning" role="note">[^]*?<\/div>\n/, match => compatMode ? '' : match);
+  html = replaceOnce(html, /<span class="build-note">[^]*?<\/span>/, match => compatMode
+    ? '<span class="build-note">Compatible build, compiled at build time · <a href="index-native.html">Native CSS build</a></span>'
+    : match);
   return html;
 }
 

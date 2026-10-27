@@ -330,98 +330,9 @@ async function testContrast(chrome, safari) {
   }
 }
 
-const TONES = ['red', 'blue', 'teal', 'amber', 'black', 'white', 'deep-purple', 'currentColor'];
-const INKS = ['blue', 'red', 'amber'];
-const MIXES = ['pink', 'amber', 'teal', 'deep-orange', 'white', 'black'];
-async function sampleDemo(page) {
-  const selectors = await page.evaluate(() => {
-    const out = [];
-    const tag = (el, i) => { el.setAttribute(`data-probe-${i}`, ''); return `[data-probe-${i}]`; };
-    let n = 0;
-    document.querySelectorAll('.operation-swatch, .accent-swatch, .runtime-spheres i, .example-button, .example-alert, .tone-dot, .mix-cell, .mix-option i, .tone-cell, .hsl-cell, .hue-compare i, .chroma-cell, .theme-stage, .a11y-sample, .derived-button')
-      .forEach(el => out.push([tag(el, n++), 'background-color']));
-    document.querySelectorAll('[data-fn="rgba"] .operation-swatch, [data-fn="opacity"] .operation-swatch, .compose-swatch, .alpha-swatch')
-      .forEach(el => out.push([tag(el, n++), 'background-color', '::before']));
-    document.querySelectorAll('.example-alert, .ink-option, .contrast-sample, .a11y-sample, .derived-button').forEach(el => out.push([tag(el, n++), 'color']));
-    document.querySelectorAll('.contrast-sample').forEach(el => out.push([tag(el, n++), 'background-color']));
-    document.querySelectorAll('.theme-card, .derived-button').forEach(el => out.push([tag(el, n++), 'border-top-color']));
-    return out;
-  });
-  return readColours(page, selectors).then(values => values.map((v, i) => ({ v, at: selectors[i] })));
-}
-
-// Every contrast label must name the colour the text actually uses.
-async function checkContrastLabels(page, label) {
-  const mismatches = await page.evaluate(() => [...document.querySelectorAll('.contrast-sample')].map(el => {
-    const text = el.querySelector('.contrast-label').innerText.replace(/\s+/g, ' ').trim().toLowerCase();
-    const colour = getComputedStyle(el).color;
-    const expected = colour === 'rgb(0, 0, 0)' ? 'black text' : colour === 'rgb(255, 255, 255)' ? 'white text' : `unexpected ${colour}`;
-    return text === expected ? null : `${el.dataset.colour || el.dataset.example || el.parentElement.dataset.example}: label "${text}", colour ${colour}`;
-  }).filter(Boolean));
-  mismatches.forEach(m => check(false, `${label} contrast label: ${m}`));
-}
-
-async function renderDemo(browser, file) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  await page.goto(pathToFileURL(path.join(root, 'dist', file)).href);
-  await checkContrastLabels(page, `${browser.browserType().name()} ${file}`);
-  const states = [];
-  for (const [t, tone] of TONES.entries()) {
-    await page.click(`label:has(#tone-${tone})`);
-    await page.click(`label:has(#mix-${MIXES[t % MIXES.length]})`);
-    for (const ink of tone === 'currentColor' ? INKS : [INKS[0]]) {
-      await page.click(`label[for="ink-${ink}"]`);
-      states.push({ name: `${tone}/${ink}`, samples: await sampleDemo(page) });
-    }
-  }
-  await page.close();
-  return states;
-}
-
-async function testDemos(chrome, safari) {
-  let start = failures.length;
-  const native = await renderDemo(chrome, 'index-native.html');
-  const compat = await renderDemo(chrome, 'index.html');
-  const compare = (a, b, label) => a.forEach((state, s) => state.samples.forEach((sample, i) => {
-    const other = b[s].samples[i];
-    check(close(sample.v, other.v), `${label} demo ${state.name} ${sample.at.join(' ')}\n    ${fmt(sample.v)}\n    ${fmt(other.v)}`);
-  }));
-  compare(native, compat, 'Chromium native vs compat');
-  const swatchesChange = (a, b) => a.samples.some((s, i) => !close(s.v, b.samples[i].v));
-  check(swatchesChange(compat[0], compat[1]), 'Demo swatches must change with the palette selection');
-  const current = compat.filter(s => s.name.startsWith('currentColor/'));
-  check(swatchesChange(current[0], current[1]) && swatchesChange(current[1], current[2]), 'currentColor demo must follow the ink selection');
-  const transparent = compat[0].samples.filter(s => s.v.rgba[3] === 0).map(s => s.at.join(' '));
-  check(transparent.length === 0, `Demo swatches rendered transparent: ${transparent.join(', ')}`);
-  console.log(`Chromium demo: ${native.length} palette/ink states × ${native[0].samples.length} swatches, native vs compat ${failuresSince(start)}.`);
-
-  // Simulate an older browser: the compat CSS without its @supports (contrast-color()) blocks.
-  start = failures.length;
-  const runtimeExamples = ['oklch', 'custom-property', 'dynamic'];
-  const nativeColours = await contrastColours(chrome, 'index-native.html');
-  const legacyColours = await contrastColours(chrome, 'index.html', { legacy: true });
-  check(legacyColours.size === 34, `expected 34 contrast samples, found ${legacyColours.size}`);
-  for (const [name, colour] of legacyColours) {
-    if (runtimeExamples.includes(name)) check(colour === 'rgb(0, 0, 0)', `Without contrast-color(), ${name} should use its declared fallback, got ${colour}`);
-    else check(colour === nativeColours.get(name), `Without contrast-color(), fallback for ${name} is ${colour} but contrast-color() chooses ${nativeColours.get(name)}`);
-  }
-  const darkNative = await contrastColours(chrome, 'index-native.html', { scheme: 'dark' });
-  const darkLegacy = await contrastColours(chrome, 'index.html', { legacy: true, scheme: 'dark' });
-  for (const name of ['theme-card', 'theme-button', 'theme-badge', 'derived-button']) {
-    check(darkLegacy.get(name) === darkNative.get(name), `Without contrast-color(), dark ${name} is ${darkLegacy.get(name)} but contrast-color() chooses ${darkNative.get(name)}`);
-  }
-  console.log(`Chromium demo without contrast-color(): ${legacyColours.size - runtimeExamples.length} fallbacks (static, light-dark() and author-declared) match native in light and dark schemes; ${runtimeExamples.length} runtime examples use their declared default — ${failuresSince(start)}.`);
-
-  if (!safari) return;
-  start = failures.length;
-  const webkitCompat = await renderDemo(safari, 'index.html');
-  compare(webkitCompat, compat, 'WebKit vs Chromium compat');
-  console.log(`WebKit demo: compat landing page vs Chromium ${failuresSince(start)} (${webkitCompat.length} states).`);
-}
-
 // Serves dist/ from a fake origin so the CSS can be rewritten (file:// cannot be intercepted).
-async function openDemo(browser, file, { legacy = false, scheme, osScheme = 'light' } = {}) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, colorScheme: osScheme });
+async function openDemo(browser, file, { legacy = false, osScheme = 'light', width = 1280 } = {}) {
+  const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme: osScheme });
   await page.route('http://demo.test/**', route => {
     const name = new URL(route.request().url()).pathname.slice(1);
     const filePath = path.join(root, 'dist', name);
@@ -431,83 +342,149 @@ async function openDemo(browser, file, { legacy = false, scheme, osScheme = 'lig
     return route.fulfill({ contentType: name.endsWith('.css') ? 'text/css' : 'text/html', body });
   });
   await page.goto(`http://demo.test/${file}`);
-  if (scheme) await page.click(`label:has(#scheme-${scheme})`);
   return page;
 }
 
-async function contrastColours(browser, file, options = {}) {
-  const page = await openDemo(browser, file, options);
-  await checkContrastLabels(page, `${browser.browserType().name()} ${file}${options.legacy ? ' without contrast-color()' : ''}${options.scheme ? ` (${options.scheme})` : ''}`);
-  const colours = new Map(await page.$$eval('.contrast-sample, .derived-button', els => els.map(el => [el.dataset.colour || el.dataset.example || el.parentElement.dataset.example || 'derived-button', getComputedStyle(el).color])));
-  await page.close();
-  return colours;
+const PLAYGROUND_PROBES = [['.preview', 'background-color'], ['.preview', 'color'], ...['lighten', 'darken', 'tint', 'shade', 'tone', 'chroma'].map(fn => [`.tile[data-fn="${fn}"] i`, 'background-color'])];
+const STATIC_PROBES = [
+  ['.alert', 'background-color'], ['.alert', 'border-top-color'], ['.alert', 'color'],
+  ...[1, 2, 3, 4].flatMap(n => [[`.tag:nth-child(${n})`, 'background-color'], [`.tag:nth-child(${n})`, 'border-top-color']]),
+  ['.card', 'background-color'], ['.card', 'color'], ['.button', 'background-color'], ['.button', 'color'], ['.button', 'border-top-color'],
+];
+
+// The playground in every palette state: colours, the visible name and the black/white label.
+async function samplePlayground(page) {
+  const states = [];
+  for (const name of palette.keys()) {
+    await page.click(`label:has(#tone-${name})`);
+    const colours = await readColours(page, PLAYGROUND_PROBES);
+    const labels = await page.evaluate(() => ({
+      name: getComputedStyle(document.querySelector('.preview-name'), '::before').content,
+      captions: [...document.querySelectorAll('.preview code, .tile code')].map(el => getComputedStyle(el.querySelector('.active-name'), '::before').content),
+      contrast: document.querySelector('.contrast-result').innerText.trim(),
+    }));
+    states.push({ name, colours, labels });
+  }
+  return states;
 }
 
-const THEME_PROBES = [
-  ['.theme-stage', 'background-color'], ['.theme-card', 'background-color'], ['.theme-card', 'color'], ['.theme-card', 'border-top-color'],
-  ['.theme-button', 'background-color'], ['.theme-button', 'color'], ['.theme-badge', 'background-color'], ['.theme-badge', 'color'],
-];
-async function themeColours(browser, file, scheme, osScheme) {
-  const page = await openDemo(browser, file, { scheme, osScheme });
-  await checkContrastLabels(page, `${browser.browserType().name()} ${file} ${scheme}/${osScheme}`);
-  const values = await readColours(page, THEME_PROBES);
-  await page.close();
+// What each displayed expression renders on its own, with the selected name substituted.
+async function expectedPlayground(chrome, page) {
+  const captions = await page.$$eval('.tile code', els => els.map(el => el.textContent));
+  const list = [...palette.keys()].flatMap(name => [`--colour(${name})`, `--colour-contrast(${name})`, ...captions.map(c => c.replace(/\)$/, `${name})`))]
+    .map((expr, i) => ({ expr, property: i % (captions.length + 2) === 1 ? 'color' : 'background-color' })));
+  const values = (await renderCases(chrome, 'native', list)).fresh[0];
+  const size = captions.length + 2;
+  return { captions, states: [...palette.keys()].map((name, s) => values.slice(s * size, s * size + size)) };
+}
+
+async function sampleComposition(page) {
+  const values = {};
+  for (const [scheme, os] of [['light', 'dark'], ['dark', 'light'], ['auto', 'light'], ['auto', 'dark']]) {
+    await page.emulateMedia({ colorScheme: os });
+    await page.click(`label:has(#scheme-${scheme})`);
+    values[`${scheme}/${os}`] = await readColours(page, STATIC_PROBES);
+  }
+  await page.click('label:has(#scheme-light)');
+  await page.hover('.button');
+  values.hover = (await readColours(page, [['.button', 'background-color']]))[0];
+  await page.mouse.move(0, 0);
   return values;
 }
 
-// CSS-only theme switch: radios set color-scheme; light-dark() and the library follow.
-async function testThemes(chrome, safari) {
-  const start = failures.length;
-  const runs = [['light', 'dark'], ['dark', 'light'], ['system', 'light'], ['system', 'dark']];
-  const engines = [['Chromium', chrome, ['index-native.html', 'index.html']], ['WebKit', safari, ['index.html']]].filter(([, b]) => b);
+async function testDemos(chrome, safari) {
+  let start = failures.length;
+  const runs = [['Chromium native', chrome, 'index-native.html'], ['Chromium compat', chrome, 'index.html'], ['Chromium compat without contrast-color()', chrome, 'index.html', { legacy: true }]];
+  if (safari) runs.push(['WebKit compat', safari, 'index.html']);
   const results = {};
-  for (const [engine, browser, files] of engines) {
-    for (const file of files) {
-      for (const [scheme, os] of runs) results[`${engine} ${file} ${scheme}/${os}`] = await themeColours(browser, file, scheme, os);
+  let expected;
+  for (const [label, browser, file, options] of runs) {
+    const page = await openDemo(browser, file, options);
+    if (!expected) expected = await expectedPlayground(chrome, page);
+    results[label] = { playground: await samplePlayground(page), composition: await sampleComposition(page) };
+    await page.close();
+  }
+
+  const reference = results['Chromium native'];
+  for (const [label, result] of Object.entries(results)) {
+    result.playground.forEach(({ name, colours, labels }, s) => {
+      const want = expected.states[s];
+      check(close(colours[0], want[0]), `${label} ${name}: preview background should be --colour(${name}), got ${fmt(colours[0])}`);
+      check(close(colours[1], want[1]), `${label} ${name}: preview text should be --colour-contrast(${name}) ${fmt(want[1])}, got ${fmt(colours[1])}`);
+      expected.captions.forEach((caption, t) => {
+        check(close(colours[t + 2], want[t + 2]), `${label} ${name}: tile "${caption.replace(/\)$/, `${name})`)}" renders ${fmt(colours[t + 2])}, expression gives ${fmt(want[t + 2])}`);
+      });
+      check(labels.name === `"${name}"` && labels.captions.every(c => c === `"${name}"`), `${label} ${name}: displayed names ${labels.name} ${labels.captions.join(' ')}`);
+      const colourName = colours[1].rgba[0] === 0 ? 'black' : 'white';
+      check(labels.contrast === `/* ${colourName} */`, `${label} ${name}: contrast label "${labels.contrast}" but text is ${fmt(colours[1])}`);
+    });
+    for (const [state, values] of Object.entries(result.composition)) {
+      if (state === 'hover') continue;
+      STATIC_PROBES.forEach((probe, i) => check(close(values[i], reference.composition[state][i]), `${label} composition ${state} ${probe.join(' ')}: ${fmt(values[i])} vs native ${fmt(reference.composition[state][i])}`));
     }
+    check(close(result.composition.hover, reference.composition.hover), `${label} button hover: ${fmt(result.composition.hover)} vs native ${fmt(reference.composition.hover)}`);
   }
-  const same = (a, b, label) => THEME_PROBES.forEach((probe, i) => check(close(results[a][i], results[b][i]), `${label} ${probe.join(' ')}: ${fmt(results[a][i])} vs ${fmt(results[b][i])}`));
-  for (const run of runs.map(r => r.join('/'))) {
-    same(`Chromium index-native.html ${run}`, `Chromium index.html ${run}`, `Theme ${run} native vs compat`);
-    if (safari) same(`WebKit index.html ${run}`, `Chromium index.html ${run}`, `Theme ${run} WebKit vs Chromium compat`);
+  console.log(`Playground: ${palette.size} palette states × ${PLAYGROUND_PROBES.length} colours match their displayed expressions, names and black/white labels in ${runs.length} runs (${runs.map(r => r[0]).join(', ')}) — ${failuresSince(start)}.`);
+
+  // The composition renders exactly the expressions it shows.
+  start = failures.length;
+  const button = '--colour-tone(65%, --colour-mix(35%, blue, purple))';
+  const want = (await renderCases(chrome, 'native', [
+    button, `--colour-contrast(${button})`, `--colour-darken(15, ${button})`, `--colour-darken(10, ${button})`,
+    '--colour(white)', '--colour-contrast(white)', '--colour-tone(25%, blue-grey)', '--colour-contrast(--colour-tone(25%, blue-grey))',
+    '--colour-tint(85%, red)', '--colour(red)', '--colour-shade(45%, red)',
+  ].map(expr => ({ expr, property: 'background-color' })))).fresh[0];
+  const [bg, text, border, hover, light, lightText, dark, darkText, alertBg, alertBorder, alertText] = want;
+  const c = reference.composition;
+  const at = (state, selector, property) => c[state][STATIC_PROBES.findIndex(p => p[0] === selector && p[1] === property)];
+  check(close(at('light/dark', '.button', 'background-color'), bg) && close(at('light/dark', '.button', 'color'), text) && close(at('light/dark', '.button', 'border-top-color'), border), 'button background, text and border derive from --background');
+  check(close(c.hover, hover) && !close(c.hover, bg), `button hover is --colour-darken(10, var(--background)): ${fmt(c.hover)} vs ${fmt(hover)}`);
+  check(close(at('light/dark', '.alert', 'background-color'), alertBg) && close(at('light/dark', '.alert', 'border-top-color'), alertBorder) && close(at('light/dark', '.alert', 'color'), alertText), 'hero alert renders its code');
+  for (const [state, surface, ink] of [['light/dark', light, lightText], ['auto/light', light, lightText], ['dark/light', dark, darkText], ['auto/dark', dark, darkText]]) {
+    check(close(at(state, '.card', 'background-color'), surface) && close(at(state, '.card', 'color'), ink), `card in ${state} (scheme/OS): ${fmt(at(state, '.card', 'background-color'))} on ${fmt(at(state, '.card', 'color'))}`);
   }
-  same('Chromium index.html system/light', 'Chromium index.html light/dark', 'System scheme with a light OS should match Light');
-  same('Chromium index.html system/dark', 'Chromium index.html dark/light', 'System scheme with a dark OS should match Dark');
-  const light = results['Chromium index.html light/dark'];
-  const dark = results['Chromium index.html dark/light'];
-  THEME_PROBES.forEach((probe, i) => check(!close(light[i], dark[i]), `Theme switch should change ${probe.join(' ')}`));
-  check(light[2].value === 'rgb(0, 0, 0)' && dark[2].value === 'rgb(255, 255, 255)', `Theme card text should be black in light and white in dark, got ${light[2].value} / ${dark[2].value}`);
-  console.log(`Theme switch: light, dark and system (OS light/dark) × native/compat${safari ? ' + WebKit' : ''}, ${THEME_PROBES.length} colours each — ${failuresSince(start)}.`);
+  const tagBackgrounds = [1, 2, 3, 4].map(n => at('light/dark', `.tag:nth-child(${n})`, 'background-color'));
+  check(new Set(tagBackgrounds.map(t => t.rgba.join())).size === 4, 'each currentColor tag gets its own tint');
+  console.log(`Composition: button background/text/border/hover, card in light, dark and auto (OS light/dark), hero alert and currentColor tags render their displayed CSS — ${failuresSince(start)}.`);
 }
 
-// The generated accessibility table: rendered colours must reproduce the build-time ratios.
-async function checkAccessibility(browser, file, options = {}) {
-  const page = await openDemo(browser, file, options);
-  const rows = await page.$$eval('tr[data-background]', trs => trs.map((tr, i) => {
-    tr.querySelector('.a11y-sample').setAttribute('data-a11y', i);
-    return { background: tr.dataset.background, text: tr.dataset.text, ratio: tr.dataset.ratio && Number(tr.dataset.ratio) };
-  }));
-  const values = await readColours(page, rows.flatMap((_, i) => [[`[data-a11y="${i}"]`, 'background-color'], [`[data-a11y="${i}"]`, 'color']]));
-  await page.close();
-  const label = `${browser.browserType().name()} ${file}${options.legacy ? ' without contrast-color()' : ''}`;
-  check(rows.length === 22, `${label}: expected 22 accessibility rows`);
-  rows.forEach((row, i) => {
-    const [bg, text] = [values[2 * i], values[2 * i + 1]];
-    if (!row.text) return;
-    check(close(text, { rgba: row.text === '#fff' ? [255, 255, 255, 255] : [0, 0, 0, 255] }), `${label}: ${row.background} text should be ${row.text}, got ${fmt(text)}`);
-    const measured = contrastRatio(luminance(srgb(bg)), luminance(srgb(text)));
-    check(Math.abs(measured - row.ratio) < 0.02, `${label}: ${row.background} rendered ratio ${measured.toFixed(3)} vs build-time ${row.ratio.toFixed(3)}`);
-  });
-  return rows.filter(r => r.text).length;
-}
-
-async function testAccessibility(chrome, safari) {
+// Keyboard selection, focus, in-page navigation and layout at desktop and mobile widths.
+async function testInteraction(chrome, safari) {
   const start = failures.length;
-  const runs = [[chrome, 'index-native.html'], [chrome, 'index.html'], [chrome, 'index.html', { legacy: true }]];
-  if (safari) runs.push([safari, 'index.html']);
-  let measured = 0;
-  for (const [browser, file, options] of runs) measured = await checkAccessibility(browser, file, options);
-  console.log(`Accessibility table: ${measured} build-time WCAG ratios reproduced from rendered colours in ${runs.length} runs (native, compat, compat without contrast-color()${safari ? ', WebKit' : ''}) — ${failuresSince(start)}.`);
+  const runs = [['Chromium', chrome, 'index-native.html'], ['Chromium', chrome, 'index.html']];
+  if (safari) runs.push(['WebKit', safari, 'index.html']);
+  for (const [engine, browser, file] of runs) {
+    const label = `${engine} ${file}`;
+    for (const width of [1280, 390]) {
+      const page = await openDemo(browser, file, { width });
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      check(overflow <= 0, `${label} at ${width}px overflows horizontally by ${overflow}px`);
+      await page.close();
+    }
+    const page = await openDemo(browser, file);
+    for (let i = 0; i < 20 && await page.evaluate(() => document.activeElement.name !== 'palette'); i++) await page.keyboard.press('Tab');
+    await page.keyboard.press('ArrowRight');
+    const keyboard = await page.evaluate(() => ({
+      checked: document.querySelector('input[name="palette"]:checked').value,
+      focused: document.activeElement.id,
+      outline: getComputedStyle(document.activeElement.closest('label')).outlineStyle,
+      name: getComputedStyle(document.querySelector('.preview-name'), '::before').content,
+    }));
+    check(keyboard.checked === 'light-blue' && keyboard.focused === 'tone-light-blue' && keyboard.name === '"light-blue"', `${label}: ArrowRight should select light-blue, got ${JSON.stringify(keyboard)}`);
+    check(keyboard.outline !== 'none', `${label}: focused palette option has no visible focus ring`);
+    await page.focus('#scheme-auto');
+    await page.keyboard.press('ArrowRight');
+    check(await page.evaluate(() => document.querySelector('#scheme-light').checked), `${label}: arrow keys move the scheme selection`);
+    for (const id of await page.$$eval('.nav a[href^="#"]', links => links.map(a => a.getAttribute('href').slice(1)))) {
+      await page.click(`.nav a[href="#${id}"]`);
+      await page.waitForFunction(target => Math.abs(document.getElementById(target).getBoundingClientRect().top) < 2
+        || window.scrollY + innerHeight >= document.documentElement.scrollHeight - 2, id, { timeout: 3000 }).catch(() => {});
+      const nav = await page.evaluate(target => ({ hash: location.hash, top: document.getElementById(target).getBoundingClientRect().top, bottom: window.scrollY + innerHeight >= document.documentElement.scrollHeight - 2 }), id);
+      check(nav.hash === `#${id}` && (Math.abs(nav.top) < 2 || (nav.bottom && nav.top < 900)), `${label}: nav link #${id} lands at ${JSON.stringify(nav)}`);
+    }
+    await page.close();
+  }
+  console.log(`Interaction: keyboard palette and scheme selection, visible focus, nav links and no horizontal overflow at 1280px and 390px in ${runs.length} runs — ${failuresSince(start)}.`);
 }
 
 (async () => {
@@ -537,8 +514,7 @@ async function testAccessibility(chrome, safari) {
     await testFixtures(chrome, safari);
     await testContrast(chrome, safari);
     await testDemos(chrome, safari);
-    await testThemes(chrome, safari);
-    await testAccessibility(chrome, safari);
+    await testInteraction(chrome, safari);
   } finally {
     await chrome.close();
     if (safari) await safari.close();

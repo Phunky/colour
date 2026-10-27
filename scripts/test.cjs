@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { createCompiler, contrastReport, contrastRatio, luminance, toOklch } = require('./compiler.cjs');
+const { createCompiler, contrastRatio, luminance, toOklch } = require('./compiler.cjs');
 
 const root = path.resolve(__dirname, '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
@@ -34,7 +34,6 @@ const FUNCTIONS = {
 for (const name of Object.keys(FUNCTIONS)) {
   assert.match(native, new RegExp(`@function --colour-${name}\\(--\\w+ <\\w+>, --value type\\(<custom-ident> \\| <color>\\): currentColor\\)`), `${name}: amount first, optional colour last`);
 }
-for (const level of accent.keys()) assert(compatible.includes(`.accent-cell[data-level="${level}"]`), `accent ${level} in demo`);
 
 // Compiler: each function with omitted, explicit currentColor, palette and arbitrary colours.
 const expected = (name, amount, base) => ({
@@ -190,24 +189,18 @@ assert.equal(staticColour('--colour-mix(50%, red, var(--x))'), null, 'runtime co
 // WCAG 2.x: luminance, ratios, thresholds and what cannot be computed.
 assert(near(contrastRatio(luminance({ r: 1, g: 1, b: 1 }), luminance({ r: 0, g: 0, b: 0 })), 21, 1e-9), 'white on black is 21:1');
 assert(near(contrastRatio(luminance(staticColour('#767676')), 1), 4.54, 0.01), '#767676 on white is 4.54:1');
-const report = name => contrastReport(staticColour(`--colour(${name})`));
-assert.deepEqual(report('white'), { text: '#000', ratio: 21, aa: true, aaa: true }, 'white');
-assert.deepEqual(report('black'), { text: '#fff', ratio: 21, aa: true, aaa: true }, 'black');
 for (const name of palette.keys()) {
-  const r = report(name);
-  assert(r.ratio > 1 && r.aa === (r.ratio >= 4.5) && r.aaa === (r.ratio >= 7), `${name} thresholds`);
-  assert.equal(r.text, compileFallback(`--colour-contrast(${name})`), `${name} report agrees with the contrast fallback`);
-  const other = contrastRatio(luminance(staticColour(`--colour(${name})`)), r.text === '#fff' ? 0 : 1);
-  assert(r.ratio >= other, `${name}: chosen text has the higher ratio`);
+  const background = luminance(staticColour(`--colour(${name})`));
+  const choice = compileFallback(`--colour-contrast(${name})`);
+  const [chosen, other] = choice === '#fff' ? [1, 0] : [0, 1];
+  assert(contrastRatio(background, chosen) >= contrastRatio(background, other), `${name}: ${choice} has the higher WCAG ratio`);
 }
-assert.equal(report('blue-grey').aa, true);
-assert.equal(report('blue-grey').aaa, false);
-assert.match(contrastReport(staticColour('--colour-opacity(0.6, indigo)')).reason, /translucent/);
-assert.match(contrastReport(null).reason, /runtime/);
-const tie = Array.from({ length: 2551 }, (_, i) => `rgb(${i / 10}, ${i / 10}, ${i / 10})`).find(c => contrastReport(staticColour(c)).reason);
-assert(tie, 'a grey close to the black/white crossover exists');
-assert.match(contrastReport(staticColour(tie)).reason, /too close to call/);
-assert.equal(compileFallback(`--colour-contrast(${tie})`), null, `no static guess for the near-tie ${tie}`);
+const crossover = Array.from({ length: 2551 }, (_, i) => `rgb(${i / 10}, ${i / 10}, ${i / 10})`);
+const tie = crossover.find(c => compileFallback(`--colour-contrast(${c})`) === null);
+assert(tie, 'a grey close to the black/white crossover has no static guess');
+const tieLuminance = luminance(staticColour(tie));
+const [toWhite, toBlack] = [contrastRatio(tieLuminance, 1), contrastRatio(tieLuminance, 0)];
+assert(Math.abs(toWhite - toBlack) / Math.max(toWhite, toBlack) < 0.005, `${tie} is a near-tie`);
 
 // Malformed or unsupported calls fail loudly.
 const failures = [
@@ -252,98 +245,67 @@ for (const [value, pattern] of failures) assert.throws(() => compileValue(value)
 // Generated demo files.
 assert(!/@function\s+--/.test(compatible), 'no @function rules in compatible CSS');
 assert(!/--[\w-]+\(/.test(compatible.replace(/\/\*[^]*?\*\//g, '')), 'no uncompiled function calls');
-assert(compatible.includes('main:has(#tone-currentColor:checked) { --active: currentColor;'), 'currentColor stays dynamic');
-assert(/rgb\(from hsl\(from hsl\(from currentColor/.test(compatible), 'nested currentColor composition preserved');
 assert(html.includes('demo.compat.css') && !html.includes('colour.native.css'), 'default page loads compatible CSS');
-assert(htmlNative.includes('colour.native.css'), 'native page loads CSS functions');
+assert(htmlNative.includes('colour.native.css') && htmlNative.includes('demo.native.css'), 'native page loads CSS functions');
+assert(standalone.includes('<style>') && !standalone.includes('<link rel="stylesheet"'), 'standalone embeds CSS');
 assert(!/style="[^"]*--colour/.test(html), 'compat inline styles compiled');
-assert(htmlNative.includes('style="--token: --colour(red);"'), 'native inline styles untouched');
-assert(standalone.includes('<style>'), 'standalone embeds CSS');
-assert.equal((htmlSource.match(/<input id="tone-/g) || []).length, 22, '21 palette options plus currentColor');
-for (const name of palette.keys()) assert(htmlSource.includes(`id="tone-${name}"`), `tone-${name} option`);
-for (const name of palette.keys()) assert(demoSource.includes(`main:has(#tone-${name}:checked) { --active: --colour(${name}); }`), `tone-${name} rule`);
+assert(htmlNative.includes(`style="--swatch: --colour(red);"`), 'native inline styles untouched');
+assert(htmlNative.includes('class="support-warning"') && !html.includes('support-warning'), 'only the native build warns about support');
+assert(html.includes('href="index-native.html">Native CSS build') && htmlNative.includes('href="index.html">Compatible build'), 'each build links to the other');
 
-// The expression shown in each composition card is exactly the one the card renders.
+// Every class and id used by a selector exists in the page, and every in-page link has a target.
+const selectors = demoSource.replace(/\/\*[^]*?\*\//g, '').replace(/\{[^{}]*\}/g, ' ').replace(/@[^{]*\{/g, ' ');
+for (const [, kind, name] of selectors.matchAll(/([.#])([a-zA-Z][\w-]*)/g)) {
+  const pattern = kind === '#' ? new RegExp(`id="${name}"`) : new RegExp(`class="(?:[^"]* )?${name}(?: [^"]*)?"`);
+  assert(pattern.test(htmlSource), `selector ${kind}${name} matches the page`);
+}
+for (const [, id] of htmlSource.matchAll(/href="#([\w-]+)"/g)) assert(htmlSource.includes(`id="${id}"`), `#${id} link target`);
+for (const removed of ['accessibility', 'themes', 'accent-cell', 'alpha-card', 'compose-card', 'contrast-chip', 'build:']) {
+  assert(!htmlSource.includes(removed) && !demoSource.includes(removed), `no remnants of ${removed}`);
+}
+
+// Palette: 21 radios driving --active, its contrast colour and its name; blue by default.
 const normalise = s => s.replace(/\s+/g, ' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim();
-const cards = [...htmlSource.matchAll(/class="compose-card surface" data-example="([\w-]+)"[^]*?<pre class="code-box"><code>([^]*?)<\/code><\/pre>/g)];
-assert(cards.length >= 12, 'composition examples present');
-for (const [, example, code] of cards) {
-  const rule = demoSource.match(new RegExp(`\\.compose-card\\[data-example="${example}"\\] \\.compose-swatch::before \\{ background: ([^;]+); \\}`));
-  assert(rule, `CSS rule for composition example ${example}`);
-  assert.equal(normalise(code), normalise(rule[1]), `displayed code matches CSS for ${example}`);
-}
-// Contrast: chips cover the whole palette, cards show their real expressions,
-// and the compat output keeps contrast-color() behind @supports with fallbacks.
+assert.equal((htmlSource.match(/<input id="tone-/g) || []).length, 21, 'one option per palette colour');
+assert(htmlSource.includes('<input id="tone-blue" type="radio" name="palette" value="blue" checked>'), 'blue is selected by default');
+assert(demoSource.includes('main { --active: --colour(blue); --on-active: --colour-contrast(blue); --name: "blue"; }'), 'default state matches the default radio');
 for (const name of palette.keys()) {
-  assert(htmlSource.includes(`data-colour="${name}"><strong>${name}</strong><code>--colour-contrast(${name})</code>`), `contrast chip ${name}`);
-  assert(demoSource.includes(`.contrast-chip[data-colour="${name}"] { background: --colour(${name}); --text-colour: --colour-contrast(${name}); }`), `contrast chip rule ${name}`);
-  const fallback = compileFallback(`--colour-contrast(${name})`);
-  assert(compatible.includes(`.contrast-chip[data-colour="${name}"] { background: ${palette.get(name)}; --text-colour: ${fallback}; }\n@supports (color: contrast-color(red)) {\n .contrast-chip[data-colour="${name}"] { --text-colour: contrast-color(${palette.get(name)}); } }`), `compat contrast chip ${name}`);
+  assert(htmlSource.includes(`style="--swatch: --colour(${name});" title="${name}"><input id="tone-${name}" type="radio" name="palette" value="${name}"`), `${name} option`);
+  if (name === 'blue') continue;
+  assert(demoSource.includes(`main:has(#tone-${name}:checked) { --active: --colour(${name}); --on-active: --colour-contrast(${name}); --name: "${name}"; }`), `${name} rule`);
+  const hex = palette.get(name);
+  assert(compatible.includes(`main:has(#tone-${name}:checked) { --active: ${hex}; --on-active: ${compileFallback(`--colour-contrast(${name})`)}; --name: "${name}"; }\n@supports (color: contrast-color(red)) {\n main:has(#tone-${name}:checked) { --on-active: contrast-color(${hex}); } }`), `compat ${name} rule`);
 }
-const contrastCards = [...htmlSource.matchAll(/data-example="([\w-]+)"><div class="contrast-sample">[^]*?<pre class="code-box"><code>background: ([^]*?);\ncolor: ([^]*?);<\/code><\/pre>/g)];
-assert.equal(contrastCards.length, 9, 'nine contrast examples');
-for (const [, example, background, color] of contrastCards) {
-  const rule = demoSource.match(new RegExp(`\\.contrast-card\\[data-example="${example}"\\] \\.contrast-sample \\{ background: ([^;]+);(?: --text-colour: #(?:000|fff);)? --text-colour: ([^;]+); \\}`));
-  assert(rule, `CSS rule for contrast example ${example}`);
-  assert.equal(normalise(background), normalise(rule[1]), `background shown for ${example}`);
-  assert.equal(normalise(color), normalise(rule[2]), `contrast shown for ${example}`);
-  assert(rule[2].startsWith('--colour-contrast('), `${example} uses --colour-contrast()`);
+assert(demoSource.includes('.preview { background: var(--active); color: var(--on-active);'), 'preview renders the code it shows');
+assert(htmlSource.includes('<code>background: --colour(<span class="active-name"></span>);\ncolor: --colour-contrast(<span class="active-name"></span>);'), 'preview code');
+
+// Each tile's caption, with the selected name substituted, is the declaration that paints it.
+const tiles = [...htmlSource.matchAll(/<figure class="tile" data-fn="([\w-]+)"><i><\/i><figcaption><code>([^<]*)<span class="active-name"><\/span>\)<\/code>/g)];
+assert.equal(tiles.length, 6, 'three groups of two tiles');
+for (const [, fn, prefix] of tiles) {
+  const rule = demoSource.match(new RegExp(`\\.tile\\[data-fn="${fn}"\\] i \\{ background: ([^;]+); \\}`));
+  assert(rule, `CSS rule for tile ${fn}`);
+  assert.equal(rule[1], `${prefix}var(--active))`, `tile ${fn} shows its real CSS`);
 }
+
+// Displayed code blocks match the declarations that render the hero alert, tags and composition.
+const codeBlock = start => htmlSource.match(new RegExp(`<code>${start.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^]*?)<\\/code>`))[1].replaceAll('&amp;', '&');
+const declarations = code => [...normalise(code).matchAll(/([\w-]+): ([^;]+);/g)].map(([, p, v]) => `${p}: ${v};`);
+const ruleFor = selector => normalise(demoSource.split('\n').filter(l => l.startsWith(`${selector} {`) && l.includes('--')).join(' '));
+const [cardCode, buttonCode] = htmlSource.match(/<pre class="code compose-code"><code>([^]*?)<\/code>/)[1].replaceAll('&amp;', '&').split(/\n\n/);
+const shownCode = { '.alert': codeBlock('.alert {'), '.tag': codeBlock('.tag {'), '.card': cardCode, '.button': buttonCode };
+for (const [selector, count] of [['.alert', 3], ['.tag', 2], ['.card', 3], ['.button', 5]]) {
+  const shown = declarations(shownCode[selector]);
+  assert.equal(shown.length, count, `${selector}: ${count} declarations shown`);
+  for (const declaration of shown) assert(ruleFor(selector).includes(declaration), `${selector} uses ${declaration}`);
+}
+assert(ruleFor('.button').includes('&:hover { background: --colour-darken(10, var(--background)); }'), 'hover shown is hover used');
+assert(compatible.includes('.tag { background: color-mix(in srgb, currentColor, white 85%); border-color: color-mix(in srgb, currentColor, white 60%); }'), 'tags stay currentColor-based');
+assert(compatible.includes('.card { --surface: light-dark(#fff, oklch(from #607d8b 25% c h / alpha)); background: var(--surface); color: light-dark(#000, #fff); }'), 'card keeps its author fallback');
+for (const scheme of ['light', 'dark']) assert(compatible.includes(`main:has(#scheme-${scheme}:checked) .stage { color-scheme: ${scheme}; }`), `${scheme} switch`);
+
 const contrastDecls = (demoSource.match(/:\s*--colour-contrast\(/g) || []).length;
-assert.equal(contrastDecls, 34, 'contrast declarations in the demo');
+assert.equal(contrastDecls, 23, 'contrast declarations in the demo');
 assert.equal((compatible.match(/@supports \(color: contrast-color\(red\)\)/g) || []).length, contrastDecls, 'every contrast rule is progressively enhanced');
 
-// Alpha cards show their real expression, and the label states the expected alpha.
-const alphaCards = [...htmlSource.matchAll(/class="alpha-card surface" data-example="([\w-]+)"><div class="alpha-swatch" data-alpha="([\d.]+)">[^]*?<pre class="code-box"><code>([^]*?)<\/code><\/pre>/g)];
-assert.equal(alphaCards.length, 6, 'six alpha examples');
-for (const [, example, alpha, code] of alphaCards) {
-  const rule = demoSource.match(new RegExp(`\\.alpha-card\\[data-example="${example}"\\] \\.alpha-swatch::before \\{ background: ([^;]+); \\}`));
-  assert(rule, `CSS rule for alpha example ${example}`);
-  assert.equal(normalise(code), normalise(rule[1]), `displayed code matches CSS for ${example}`);
-  const value = staticColour(rule[1].replaceAll('var(--active)', 'blue'));
-  assert(near(value.alpha, Number(alpha), 1e-9), `${example}: label α ${alpha}, computed ${value.alpha}`);
-}
-
-// Theme switch: CSS-only, and the code panel shows declarations the preview really uses.
-assert.equal((htmlSource.match(/<input id="scheme-(system|light|dark)" type="radio" name="scheme"/g) || []).length, 3, 'three scheme radios');
-for (const [selector, scheme] of [['scheme-light', 'light'], ['scheme-dark', 'dark']]) {
-  assert(compatible.includes(`main:has(#${selector}:checked) .theme-stage { color-scheme: ${scheme}; }`), `${scheme} switch`);
-}
-assert(compatible.includes('.theme-stage { color-scheme: light dark;'), 'system scheme by default');
-assert(compatible.includes('.theme-badge { background: light-dark(#ffc107, #3f51b5); --text-colour: light-dark(#000, #fff); }'), 'static light-dark() contrast fallback');
-const themeCode = htmlSource.match(/<pre class="code-window theme-code"><code>([^]*?)<\/code><\/pre>/)[1];
-const themeDeclarations = [...themeCode.matchAll(/(--background|background|color|border-color): ([^;]+);/g)];
-assert(themeDeclarations.length >= 8, 'theme code panel declarations');
-const themeCss = normalise(demoSource.match(/\.theme-card \{ --background[^]*?\.theme-badge \{[^\n]*/)[0]);
-for (const [, property, value] of themeDeclarations) {
-  assert(themeCss.includes(normalise(value)), `theme preview uses ${property}: ${normalise(value)}`);
-}
-
-// Accessibility table: generated from the compiler, never hand-written.
-const rows = [...html.matchAll(/<tr data-background="([^"]+)"([^>]*)>([^]*?)<\/tr>/g)];
-assert.equal(rows.length, 22, '21 palette rows plus a translucent example');
-assert(!/<tr data-background/.test(htmlSource), 'no hand-written accessibility rows in the source');
-for (const [, background, data, cells] of rows) {
-  if (!palette.has(background)) {
-    assert.equal(data, '', `${background} has no ratio`);
-    assert.match(cells, /Not computed \(translucent/, `${background} explains why`);
-    continue;
-  }
-  const r = report(background);
-  assert.equal(data, ` data-text="${r.text}" data-ratio="${r.ratio}"`, `${background} data`);
-  const shown = cells.match(/<td>([\d.]+):1<\/td><td><span class="a11y-(pass|fail)">\w+<\/span><\/td><td><span class="a11y-(pass|fail)">/);
-  assert(shown, `${background} cells`);
-  assert.equal(shown[1], (Math.floor(r.ratio * 100) / 100).toFixed(2), `${background} ratio truncated, not rounded up`);
-  assert.equal(shown[2] === 'pass', r.aa, `${background} AA`);
-  assert.equal(shown[3] === 'pass', r.aaa, `${background} AAA`);
-  assert(cells.includes(`color: ${r.text}; color: contrast-color(${palette.get(background)});`), `${background} sample uses contrast-color() with the computed fallback`);
-}
-assert(htmlNative.includes('<span class="a11y-sample" style="background: --colour(red); color: --colour-contrast(red);">'), 'native table uses the library');
-assert(compatible.includes('.contrast-card[data-example="custom-property"] .contrast-sample { background: var(--brand); --text-colour: #000; }'), 'runtime backgrounds keep the author fallback');
-assert(compatible.includes('--text-colour: contrast-color(var(--brand));'), 'runtime backgrounds use native contrast-color()');
-
-const operationCodes = [...htmlSource.matchAll(/data-fn="([\w-]+)"[^]*?<code class="code-box">([^<]+)<\/code>/g)];
-assert.equal(operationCodes.length, 9, 'nine operation cards');
-for (const [, fn, code] of operationCodes) assert(demoSource.includes(code), `operation card ${fn} shows its real CSS`);
-
-console.log(`Checks passed: ${palette.size} colours, 16 functions, ${accent.size} accents, ${cards.length} compositions, ${alphaCards.length} alpha examples, ${contrastDecls} contrast declarations, ${rows.length} accessibility rows, compiler edge cases, theme switch and both demo modes.`);
+console.log(`Checks passed: ${palette.size} colours, 16 functions, ${accent.size} accents, compiler edge cases, ${tiles.length} playground tiles, displayed code and both demo modes.`);

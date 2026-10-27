@@ -245,20 +245,6 @@ function contrastChoice(background) {
   return white > black ? '#fff' : '#000';
 }
 
-/*
- * WCAG 2.x report for a static, opaque background and its contrast-color()
- * choice. AA/AAA are the normal-text thresholds (4.5:1 and 7:1), compared
- * without rounding. Anything that cannot be computed reliably gives a reason.
- */
-function contrastReport(background) {
-  if (!background) return { reason: 'only known at runtime' };
-  if (background.alpha < 1) return { reason: 'translucent, so it depends on what is behind it' };
-  const text = contrastChoice(background);
-  if (!text) return { reason: 'too close to call between black and white' };
-  const ratio = contrastRatio(luminance(background), text === '#fff' ? 1 : 0);
-  return { text, ratio, aa: ratio >= 4.5, aaa: ratio >= 7 };
-}
-
 function createCompiler(colourSource) {
   const palette = readPalette(colourSource);
   const accent = readAccents(colourSource);
@@ -448,4 +434,4 @@ function createCompiler(colourSource) {
 
 class DynamicContrast extends Error {}
 
-module.exports = { createCompiler, parse, luminance, contrastRatio, contrastReport, parseHex, toOklch };
+module.exports = { createCompiler, parse, luminance, contrastRatio, parseHex, toOklch };
