@@ -9,28 +9,36 @@
  *
  * Alongside the CSS it evaluates colours that are fully known at build time
  * (palette names, hex, literal rgb()/hsl(), and library transformations of
- * those). --colour-contrast() uses that to offer a static black/white fallback,
- * chosen with the WCAG 2.1 contrast ratio, for browsers without contrast-color().
- * Runtime colours (var(), currentColor, other colour spaces) are never guessed.
+ * those, including the OKLCH ones). --colour-contrast() uses that to offer a
+ * static black/white fallback, chosen with the WCAG 2.x contrast ratio, for
+ * browsers without contrast-color(). Runtime colours (var(), currentColor,
+ * other literal colour spaces), results outside the sRGB gamut and near-ties
+ * are never guessed.
  *
- * Scope: only the 12 library functions defined in src/colour.css are compiled.
+ * Scope: only the 16 library functions defined in src/colour.css are compiled.
  * It is NOT a general-purpose @function polyfill: any other dashed function
  * throws, and palette names can only be resolved where they appear literally
  * (a var() holding a palette name is passed through as a CSS colour).
  */
 
+// Amount type of every (amount, colour = currentColor) function, with the
+// literal range accepted where the CSS would otherwise be invalid or misleading.
 const SIGNATURES = {
-  'colour-lighten': 'number',
-  'colour-darken': 'number',
-  'colour-saturate': 'number',
-  'colour-desaturate': 'number',
-  'colour-adjust-hue': 'number',
-  'colour-tint': 'percentage',
-  'colour-shade': 'percentage',
-  'colour-rgba': 'number',
-  'colour-opacity': 'number',
-  'colour-accent': 'accent',
+  'colour-lighten': { kind: 'number' },
+  'colour-darken': { kind: 'number' },
+  'colour-saturate': { kind: 'number' },
+  'colour-desaturate': { kind: 'number' },
+  'colour-adjust-hue': { kind: 'number' },
+  'colour-tint': { kind: 'percentage' },
+  'colour-shade': { kind: 'percentage' },
+  'colour-rgba': { kind: 'number' },
+  'colour-opacity': { kind: 'number' },
+  'colour-fade': { kind: 'number', min: 0 },
+  'colour-tone': { kind: 'percentage', min: 0, max: 1 },
+  'colour-chroma': { kind: 'number', min: 0 },
+  'colour-accent': { kind: 'accent' },
 };
+const MIX_RANGE = { kind: 'percentage', min: 0, max: 1 };
 
 function readPalette(colourSource) {
   const fn = colourSource.match(/@function\s+--colour\([^]*?\n\}/);
@@ -167,15 +175,88 @@ function parseColourFunction(name, text) {
   return fromHsl(num(0), clamp(num(1), 0, 100), clamp(num(2), 0, 100), alpha);
 }
 
-// WCAG 2.1 relative luminance and contrast ratio. contrast-color() ignores alpha.
-function luminance({ r, g, b }) {
-  const lin = c => (c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
-  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+// OKLab/OKLCH (Björn Ottosson's matrices, as used by CSS Color 4).
+const toLinear = c => Math.sign(c) * (Math.abs(c) <= 0.04045 ? Math.abs(c) / 12.92 : ((Math.abs(c) + 0.055) / 1.055) ** 2.4);
+const fromLinear = c => Math.sign(c) * (Math.abs(c) <= 0.0031308 ? 12.92 * Math.abs(c) : 1.055 * Math.abs(c) ** (1 / 2.4) - 0.055);
+// Below this chroma the hue is powerless, so color-mix() treats it as missing.
+const ACHROMATIC = 1e-4;
+const GAMUT_EPSILON = 1e-4;
+
+function toOklch({ r, g, b, alpha }) {
+  const [lr, lg, lb] = [r, g, b].map(toLinear);
+  const l = Math.cbrt(0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb);
+  const m = Math.cbrt(0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb);
+  const s = Math.cbrt(0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb);
+  const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+  const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  const c = Math.hypot(A, B);
+  return {
+    l: 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+    c,
+    h: c < ACHROMATIC ? NaN : (Math.atan2(B, A) * 180 / Math.PI + 360) % 360,
+    alpha,
+  };
 }
+
+// Returns null outside the sRGB gamut: the browser then gamut-maps for display,
+// which a static evaluation should not try to predict.
+function fromOklch({ l: L, c, h, alpha }) {
+  const radians = (Number.isNaN(h) ? 0 : h) * Math.PI / 180;
+  const A = c * Math.cos(radians);
+  const B = c * Math.sin(radians);
+  const l = (L + 0.3963377774 * A + 0.2158037573 * B) ** 3;
+  const m = (L - 0.1055613458 * A - 0.0638541728 * B) ** 3;
+  const s = (L - 0.0894841775 * A - 1.2914855480 * B) ** 3;
+  const rgb = [
+    4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+    -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+    -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s,
+  ].map(fromLinear);
+  if (rgb.some(v => v < -GAMUT_EPSILON || v > 1 + GAMUT_EPSILON)) return null;
+  const [r, g, b] = rgb.map(v => clamp(v, 0, 1));
+  return { r, g, b, alpha };
+}
+
+// color-mix(in oklch, a, b weight): premultiplied alpha, shorter hue arc, missing hues adopt the other colour's.
+function mixOklch(a, b, weight) {
+  const p = toOklch(a);
+  const q = toOklch(b);
+  const alpha = p.alpha * (1 - weight) + q.alpha * weight;
+  if (alpha === 0) return { r: 0, g: 0, b: 0, alpha: 0 };
+  let h1 = Number.isNaN(p.h) ? q.h : p.h;
+  let h2 = Number.isNaN(q.h) ? p.h : q.h;
+  if (h2 - h1 > 180) h1 += 360;
+  else if (h2 - h1 < -180) h2 += 360;
+  const premultiplied = k => (p[k] * p.alpha * (1 - weight) + q[k] * q.alpha * weight) / alpha;
+  return fromOklch({ l: premultiplied('l'), c: premultiplied('c'), h: (h1 * (1 - weight) + h2 * weight) % 360, alpha });
+}
+
+// WCAG 2.x relative luminance and contrast ratio. contrast-color() ignores alpha.
+const luminance = ({ r, g, b }) => 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
 const contrastRatio = (a, b) => (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+// Too close to call (within 0.5%): floating-point or colour-space rounding in the
+// browser could pick the other colour, so no static choice is offered.
+const AMBIGUOUS = 0.005;
 function contrastChoice(background) {
   const l = luminance(background);
-  return contrastRatio(l, 1) > contrastRatio(l, 0) ? '#fff' : '#000';
+  const white = contrastRatio(l, 1);
+  const black = contrastRatio(l, 0);
+  if (Math.abs(white - black) / Math.max(white, black) < AMBIGUOUS) return null;
+  return white > black ? '#fff' : '#000';
+}
+
+/*
+ * WCAG 2.x report for a static, opaque background and its contrast-color()
+ * choice. AA/AAA are the normal-text thresholds (4.5:1 and 7:1), compared
+ * without rounding. Anything that cannot be computed reliably gives a reason.
+ */
+function contrastReport(background) {
+  if (!background) return { reason: 'only known at runtime' };
+  if (background.alpha < 1) return { reason: 'translucent, so it depends on what is behind it' };
+  const text = contrastChoice(background);
+  if (!text) return { reason: 'too close to call between black and white' };
+  const ratio = contrastRatio(luminance(background), text === '#fff' ? 1 : 0);
+  return { text, ratio, aa: ratio >= 4.5, aaa: ratio >= 7 };
 }
 
 function createCompiler(colourSource) {
@@ -193,10 +274,16 @@ function createCompiler(colourSource) {
     if (only.type === 'function') return compileNode(only, mode);
     const ident = only.value.trim();
     const css = palette.get(ident) || ident;
-    return { css, rgb: css.startsWith('#') ? parseHex(css) : null };
+    return { css, rgb: staticText(css) };
   }
 
-  function resolveAmount(nodes, kind, call, mode) {
+  function staticText(text) {
+    if (/^#[\da-fA-F]{3,8}$/.test(text)) return parseHex(text);
+    if (/^transparent$/i.test(text)) return { r: 0, g: 0, b: 0, alpha: 0 };
+    return null;
+  }
+
+  function resolveAmount(nodes, { kind, min = -Infinity, max = Infinity }, call, mode) {
     const value = compileNodes(nodes, mode).css.trim();
     if (!value) throw Error(`${call}: missing amount`);
     if (kind === 'accent') {
@@ -205,11 +292,17 @@ function createCompiler(colourSource) {
     }
     if (/^(calc|var|min|max|clamp)\(/.test(value)) return { css: value, number: null };
     const number = /^[+-]?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?$/i;
-    if (kind === 'number' && number.test(value)) return { css: value, number: parseFloat(value) };
+    let result = null;
+    if (kind === 'number' && number.test(value)) result = { css: value, number: parseFloat(value) };
     if (kind === 'percentage' && value.endsWith('%') && number.test(value.slice(0, -1))) {
-      return { css: value, number: parseFloat(value) / 100 };
+      result = { css: value, number: parseFloat(value) / 100 };
     }
-    throw Error(`${call}: expected a ${kind}, got "${value}"`);
+    if (!result) throw Error(`${call}: expected a ${kind}, got "${value}"`);
+    if (result.number < min || result.number > max) {
+      const scale = kind === 'percentage' ? v => `${v * 100}%` : v => v;
+      throw Error(`${call}: "${value}" is out of range (${max === Infinity ? `at least ${scale(min)}` : `${scale(min)} to ${scale(max)}`})`);
+    }
+    return result;
   }
 
   function hasArgument(nodes) {
@@ -223,10 +316,25 @@ function createCompiler(colourSource) {
     const base = resolveColour(args[0], call, mode);
     const choice = base.rgb && contrastChoice(base.rgb);
     if (mode === 'fallback') {
-      if (!choice) throw new DynamicContrast(call);
-      return { css: choice, rgb: parseHex(choice) };
+      if (choice) return { css: choice, rgb: parseHex(choice) };
+      const schemes = lightDarkChoices(args[0], mode);
+      if (schemes) return { css: `light-dark(${schemes.join(', ')})`, rgb: null };
+      throw new DynamicContrast(call);
     }
     return { css: `contrast-color(${base.css})`, rgb: choice ? parseHex(choice) : null };
+  }
+
+  // contrast(light-dark(a, b)) is light-dark(contrast(a), contrast(b)) when a and b are static.
+  function lightDarkChoices(nodes, mode) {
+    const significant = nodes.filter(n => n.type === 'function' || n.value.trim());
+    if (significant.length !== 1 || significant[0].type !== 'function' || significant[0].name !== 'light-dark') return null;
+    const branches = splitArguments(significant[0].children);
+    if (branches.length !== 2) return null;
+    const choices = branches.map(branch => {
+      const { rgb } = compileNodes(branch, mode);
+      return rgb && contrastChoice(rgb);
+    });
+    return choices.every(Boolean) ? choices : null;
   }
 
   function transform(name, amount, base) {
@@ -243,7 +351,21 @@ function createCompiler(colourSource) {
       case 'colour-shade': return mixSrgb(base, { r: 0, g: 0, b: 0, alpha: 1 }, n);
       case 'colour-rgba':
       case 'colour-opacity': return { ...base, alpha: clamp(n, 0, 1) };
+      case 'colour-fade': return { ...base, alpha: clamp(base.alpha * n, 0, 1) };
+      case 'colour-tone': return fromOklch({ ...toOklch(base), l: n });
+      case 'colour-chroma': { const c = toOklch(base); return fromOklch({ ...c, c: c.c * n }); }
     }
+  }
+
+  function compileMix(args, call, mode) {
+    if (args.length !== 3 || !args.every(hasArgument)) {
+      throw Error(`${call}: expected a weight and 2 colours (both colours are required)`);
+    }
+    const weight = resolveAmount(args[0], MIX_RANGE, call, mode);
+    const first = resolveColour(args[1], call, mode);
+    const second = resolveColour(args[2], call, mode);
+    const rgb = first.rgb && second.rgb && weight.number !== null ? mixOklch(first.rgb, second.rgb, weight.number) : null;
+    return { css: `color-mix(in oklch, ${first.css}, ${second.css} ${weight.css})`, rgb };
   }
 
   function compileLibraryCall(name, children, mode) {
@@ -254,13 +376,14 @@ function createCompiler(colourSource) {
       return resolveColour(args[0] || [], call, mode);
     }
     if (name === 'colour-contrast') return compileContrast(args, call, mode);
-    const kind = SIGNATURES[name];
-    if (!kind) throw Error(`Unsupported custom function --${name}()`);
+    if (name === 'colour-mix') return compileMix(args, call, mode);
+    const signature = SIGNATURES[name];
+    if (!signature) throw Error(`Unsupported custom function --${name}()`);
     if (args.length < 1 || args.length > 2) throw Error(`${call}: expected 1 or 2 arguments`);
     if (args.length === 2 && !hasArgument(args[1])) {
       throw Error(`${call}: empty colour argument (omit it to use currentColor)`);
     }
-    const amount = resolveAmount(args[0], kind, call, mode);
+    const amount = resolveAmount(args[0], signature, call, mode);
     const base = resolveColour(args[1] || [], call, mode);
     const rgb = base.rgb && amount.number !== null ? transform(name, amount.number, base.rgb) : null;
     const b = base.css;
@@ -275,6 +398,9 @@ function createCompiler(colourSource) {
       'colour-shade': `color-mix(in srgb, ${b}, black ${a})`,
       'colour-rgba': `rgb(from ${b} r g b / ${a})`,
       'colour-opacity': `rgb(from ${b} r g b / ${a})`,
+      'colour-fade': `rgb(from ${b} r g b / clamp(0, calc(alpha * ${a}), 1))`,
+      'colour-tone': `oklch(from ${b} ${a} c h / alpha)`,
+      'colour-chroma': `oklch(from ${b} l max(0, c * ${a}) h / alpha)`,
       'colour-accent': `hsl(from ${b} h s clamp(0, calc(l + ${a}), 100) / alpha)`,
     }[name];
     return { css, rgb };
@@ -284,7 +410,7 @@ function createCompiler(colourSource) {
     if (node.type === 'comma') return { css: ',', rgb: null };
     if (node.type === 'text') {
       const text = node.value.trim();
-      return { css: node.value, rgb: /^#[\da-fA-F]{3,8}$/.test(text) ? parseHex(text) : null };
+      return { css: node.value, rgb: staticText(text) };
     }
     if (node.name.startsWith('--')) return compileLibraryCall(node.name.slice(2), node.children, mode);
     const inner = compileNodes(node.children, mode).css;
@@ -314,9 +440,12 @@ function createCompiler(colourSource) {
 
   const usesContrast = value => /--colour-contrast\(/.test(value);
 
-  return { compileValue, compileFallback, usesContrast, palette, accent };
+  // The sRGB colour of a value when it is fully known at build time, otherwise null.
+  const staticColour = value => compileNodes(parse(value), 'css').rgb;
+
+  return { compileValue, compileFallback, usesContrast, staticColour, palette, accent };
 }
 
 class DynamicContrast extends Error {}
 
-module.exports = { createCompiler, parse, luminance, contrastRatio, parseHex };
+module.exports = { createCompiler, parse, luminance, contrastRatio, contrastReport, parseHex, toOklch };

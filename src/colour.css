@@ -3,7 +3,8 @@
  * Experimental, pure CSS rewrite of https://github.com/Phunky/colour
  *
  * API: transformation first, colour last. The colour argument is optional
- * (except for --colour-contrast()), defaults to currentColor, and accepts a palette name or any CSS <color>
+ * (except for --colour-mix() and --colour-contrast()), defaults to
+ * currentColor, and accepts a palette name or any CSS <color>
  * (hex, rgb(), hsl(), oklch(), color-mix(), var(), or another --colour-*() result).
  *
  * The named palette has ONE source of truth: --colour().
@@ -15,8 +16,9 @@
  * identifiers for matching, while every other colour passes through unchanged.
  *
  * Browser requirements: CSS custom @function, CSS if(style()), relative
- * color syntax and contrast-color(). Not supported in all browsers.
- * Lightness/saturation adjustments use HSL percentage points (0–100).
+ * color syntax, color-mix() and contrast-color(). Not supported in all browsers.
+ * lighten/darken/saturate/desaturate use HSL percentage points (0–100);
+ * tone/chroma/mix work in OKLCH, so lightness is perceptual.
  *
  * Helpers never call each other (only --colour()): Chromium currently rejects
  * a function nested in its own argument chain (csswg-drafts#13943), so
@@ -87,6 +89,26 @@
 /* Alias of --colour-rgba(); see the header for why it does not delegate. */
 @function --colour-opacity(--alpha <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
   result: rgb(from --colour(var(--value)) r g b / var(--alpha));
+}
+
+/* Multiplies the existing alpha (0.5 of 0.6 is 0.3); --colour-opacity() replaces it. */
+@function --colour-fade(--multiplier <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: rgb(from --colour(var(--value)) r g b / clamp(0, calc(alpha * var(--multiplier)), 1));
+}
+
+/* Perceptual adjustments in OKLCH. Results can leave the sRGB gamut; the
+   browser maps them to the display like any other oklch() colour. */
+@function --colour-tone(--lightness <percentage>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: oklch(from --colour(var(--value)) var(--lightness) c h / alpha);
+}
+
+@function --colour-chroma(--multiplier <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: oklch(from --colour(var(--value)) l max(0, c * var(--multiplier)) h / alpha);
+}
+
+/* --weight is the second colour's share: 0% is the first colour, 100% the second. */
+@function --colour-mix(--weight <percentage>, --first type(<custom-ident> | <color>), --second type(<custom-ident> | <color>)) returns <color> {
+  result: color-mix(in oklch, --colour(var(--first)), --colour(var(--second)) var(--weight));
 }
 
 /* Black or white, whichever contrasts more with the background, chosen by the
