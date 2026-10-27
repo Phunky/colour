@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f8fa">
+  <meta name="description" content="A pure CSS playground for colour, an experimental native CSS colour function library.">
+  <title>colour — Pure CSS playground</title>
+  <link rel="stylesheet" href="colour.css">
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="support-warning" role="note">This demo uses experimental CSS <code>@function</code> and <code>if()</code>. To see the live functions, open it in Chrome or Edge 139+; other browsers may show empty swatches.</div>
+<header class="site-header"><div class="topbar">
+  <a class="brand" href="#top" aria-label="colour home"><span class="brandmark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-name">colour<span> / native CSS</span></span></a>
+  <nav class="navlinks" aria-label="Main navigation"><a href="#playground">Playground</a><a href="#functions">Functions</a><a href="#accents">Accents</a><a class="github-link" href="https://github.com/Phunky/colour" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+</div></header>
+<main id="top">
+  <div class="content">
+    <section class="hero" aria-label="Introduction">
+      <div class="hero-copy"><span class="eyebrow">11 years later · no Sass required</span><h1>A palette.<br><span>No variables.</span><br>Just CSS.</h1><p>The complete colour toolkit, rebuilt around native CSS functions. One source of truth. Every shade computed by the browser. No Sass, no JavaScript.</p><div class="hero-tags"><span class="hero-tag"><span>●</span> 21 named colours</span><span class="hero-tag"><span>●</span> 11 CSS functions</span><span class="hero-tag"><span>●</span> Zero JS</span></div></div>
+      <div class="hero-art" aria-hidden="true"><div class="art-grid"></div><div class="art-orb orb-pink"></div><div class="art-orb orb-blue"></div><div class="art-orb orb-amber"></div><div class="art-code">background: <b>--colour(blue)</b>;</div></div>
+    </section>
+    <section class="section" id="playground"><div class="section-heading"><div><span class="section-number">01 / Interactive palette</span><h2>Choose a colour. See everything change.</h2><p>The controls below are CSS radio inputs. The styling is powered entirely by native functions.</p></div><span class="eyebrow-pill">:has() + @function</span></div>
+      <div class="surface workbench"><div class="workbench-top"><h3>Palette playground</h3><span class="live-badge">Live, no JavaScript</span></div><div class="workbench-body"><aside class="palette-rail"><p class="subhead">01 · Select a colour</p><div class="palette-options">
+<label class="tone-option" style="--token: red;" title="Select red"><input id="tone-red" type="radio" name="palette" value="red" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">red</span></label>
+<label class="tone-option" style="--token: pink;" title="Select pink"><input id="tone-pink" type="radio" name="palette" value="pink" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">pink</span></label>
+<label class="tone-option" style="--token: purple;" title="Select purple"><input id="tone-purple" type="radio" name="palette" value="purple" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">purple</span></label>
+<label class="tone-option" style="--token: deep-purple;" title="Select deep-purple"><input id="tone-deep-purple" type="radio" name="palette" value="deep-purple" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">deep-purple</span></label>
+<label class="tone-option" style="--token: indigo;" title="Select indigo"><input id="tone-indigo" type="radio" name="palette" value="indigo" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">indigo</span></label>
+<label class="tone-option" style="--token: blue;" title="Select blue"><input id="tone-blue" type="radio" name="palette" value="blue" checked><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">blue</span></label>
+<label class="tone-option" style="--token: light-blue;" title="Select light-blue"><input id="tone-light-blue" type="radio" name="palette" value="light-blue" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">light-blue</span></label>
+<label class="tone-option" style="--token: cyan;" title="Select cyan"><input id="tone-cyan" type="radio" name="palette" value="cyan" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">cyan</span></label>
+<label class="tone-option" style="--token: teal;" title="Select teal"><input id="tone-teal" type="radio" name="palette" value="teal" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">teal</span></label>
+<label class="tone-option" style="--token: green;" title="Select green"><input id="tone-green" type="radio" name="palette" value="green" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">green</span></label>
+<label class="tone-option" style="--token: light-green;" title="Select light-green"><input id="tone-light-green" type="radio" name="palette" value="light-green" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">light-green</span></label>
+<label class="tone-option" style="--token: lime;" title="Select lime"><input id="tone-lime" type="radio" name="palette" value="lime" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">lime</span></label>
+<label class="tone-option" style="--token: yellow;" title="Select yellow"><input id="tone-yellow" type="radio" name="palette" value="yellow" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">yellow</span></label>
+<label class="tone-option" style="--token: amber;" title="Select amber"><input id="tone-amber" type="radio" name="palette" value="amber" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">amber</span></label>
+<label class="tone-option" style="--token: orange;" title="Select orange"><input id="tone-orange" type="radio" name="palette" value="orange" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">orange</span></label>
+<label class="tone-option" style="--token: deep-orange;" title="Select deep-orange"><input id="tone-deep-orange" type="radio" name="palette" value="deep-orange" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">deep-orange</span></label>
+<label class="tone-option" style="--token: brown;" title="Select brown"><input id="tone-brown" type="radio" name="palette" value="brown" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">brown</span></label>
+<label class="tone-option" style="--token: grey;" title="Select grey"><input id="tone-grey" type="radio" name="palette" value="grey" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">grey</span></label>
+<label class="tone-option" style="--token: blue-grey;" title="Select blue-grey"><input id="tone-blue-grey" type="radio" name="palette" value="blue-grey" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">blue-grey</span></label>
+<label class="tone-option" style="--token: black;" title="Select black"><input id="tone-black" type="radio" name="palette" value="black" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">black</span></label>
+<label class="tone-option" style="--token: white;" title="Select white"><input id="tone-white" type="radio" name="palette" value="white" ><span class="tone-dot" aria-hidden="true"></span><span class="tone-name">white</span></label>
+</div><p class="palette-footnote">21 colours defined exactly once inside <code>--colour()</code>. No duplicate hex codes or global colour variables.</p></aside><div class="preview-rail"><div class="preview-head"><p>Live colour preview</p><span>Function: --colour()</span></div><div class="primary-preview"><div class="preview-bigtext">Aa.</div><div class="preview-code">background: --colour(var(--active));</div></div><div class="preview-caption"><strong>Dynamic base colour</strong><span>All operations below follow your selection ↓</span></div><div class="examples"><div class="example-button"><span>Primary action</span><span aria-hidden="true">↗</span></div><div class="example-alert"><strong>Contextual UI component</strong><small>Using --colour-tint() and --colour-shade()</small></div></div></div></div></div>
+    </section>
+    <section class="section" id="functions"><div class="section-heading"><div><span class="section-number">02 / Colour operations</span><h2>Every manipulation, demonstrated.</h2><p>All nine transformation helpers run against the active colour you selected above.</p></div><span class="eyebrow-pill">HSL · sRGB · alpha</span></div>
+      <div class="function-grid">
+<article class="operation-card surface" data-fn="lighten"><div class="operation-swatch" data-mark="L + 20"></div><div class="operation-body"><h3>Lighten</h3><p>HSL lightness +20 points</p><code class="code-box">--colour-lighten(var(--active), 20)</code></div></article>
+<article class="operation-card surface" data-fn="darken"><div class="operation-swatch" data-mark="L − 20"></div><div class="operation-body"><h3>Darken</h3><p>HSL lightness −20 points</p><code class="code-box">--colour-darken(var(--active), 20)</code></div></article>
+<article class="operation-card surface" data-fn="saturate"><div class="operation-swatch" data-mark="S + 30"></div><div class="operation-body"><h3>Saturate</h3><p>Increase HSL saturation</p><code class="code-box">--colour-saturate(var(--active), 30)</code></div></article>
+<article class="operation-card surface" data-fn="desaturate"><div class="operation-swatch" data-mark="S − 45"></div><div class="operation-body"><h3>Desaturate</h3><p>Reduce HSL saturation</p><code class="code-box">--colour-desaturate(var(--active), 45)</code></div></article>
+<article class="operation-card surface" data-fn="adjust-hue"><div class="operation-swatch" data-mark="H + 90°"></div><div class="operation-body"><h3>Adjust hue</h3><p>Rotate hue by 90 degrees</p><code class="code-box">--colour-adjust-hue(var(--active), 90)</code></div></article>
+<article class="operation-card surface" data-fn="tint"><div class="operation-swatch" data-mark="+ 42% white"></div><div class="operation-body"><h3>Tint</h3><p>Blend 42% white in sRGB</p><code class="code-box">--colour-tint(var(--active), 42%)</code></div></article>
+<article class="operation-card surface" data-fn="shade"><div class="operation-swatch" data-mark="+ 38% black"></div><div class="operation-body"><h3>Shade</h3><p>Blend 38% black in sRGB</p><code class="code-box">--colour-shade(var(--active), 38%)</code></div></article>
+<article class="operation-card surface" data-fn="rgba"><div class="operation-swatch" data-mark="α = 0.4"></div><div class="operation-body"><h3>RGBA</h3><p>Apply an alpha of 0.4</p><code class="code-box">--colour-rgba(var(--active), 0.4)</code></div></article>
+<article class="operation-card surface" data-fn="opacity"><div class="operation-swatch" data-mark="α = 0.6"></div><div class="operation-body"><h3>Opacity</h3><p>RGBA convenience alias</p><code class="code-box">--colour-opacity(var(--active), 0.6)</code></div></article>
+      </div>
+    </section>
+    <section class="section" id="accents"><div class="section-heading"><div><span class="section-number">03 / Material-style scale</span><h2>Eleven accents, one colour.</h2><p>The original Sass lightness offsets, from 50 through the extra-dark 1000.</p></div><span class="eyebrow-pill">--colour-accent()</span></div>
+      <div class="surface accent-frame"><div class="accent-frame-header"><strong>Accent scale</strong><span>50 → 1000 · 500 is the unmodified base</span></div><div class="accent-grid">
+<div class="accent-cell" data-level="50"><div class="accent-swatch" title="--colour-accent(active, 50)"></div><div class="accent-meta">50</div></div>
+<div class="accent-cell" data-level="100"><div class="accent-swatch" title="--colour-accent(active, 100)"></div><div class="accent-meta">100</div></div>
+<div class="accent-cell" data-level="200"><div class="accent-swatch" title="--colour-accent(active, 200)"></div><div class="accent-meta">200</div></div>
+<div class="accent-cell" data-level="300"><div class="accent-swatch" title="--colour-accent(active, 300)"></div><div class="accent-meta">300</div></div>
+<div class="accent-cell" data-level="400"><div class="accent-swatch" title="--colour-accent(active, 400)"></div><div class="accent-meta">400</div></div>
+<div class="accent-cell" data-level="500"><div class="accent-swatch" title="--colour-accent(active, 500)"></div><div class="accent-meta">500</div></div>
+<div class="accent-cell" data-level="600"><div class="accent-swatch" title="--colour-accent(active, 600)"></div><div class="accent-meta">600</div></div>
+<div class="accent-cell" data-level="700"><div class="accent-swatch" title="--colour-accent(active, 700)"></div><div class="accent-meta">700</div></div>
+<div class="accent-cell" data-level="800"><div class="accent-swatch" title="--colour-accent(active, 800)"></div><div class="accent-meta">800</div></div>
+<div class="accent-cell" data-level="900"><div class="accent-swatch" title="--colour-accent(active, 900)"></div><div class="accent-meta">900</div></div>
+<div class="accent-cell" data-level="1000"><div class="accent-swatch" title="--colour-accent(active, 1000)"></div><div class="accent-meta">1000</div></div>
+      </div><div class="accent-explanation"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg><span>Accents use the repository's original HSL lightness adjustments, <strong>not</strong> Google's exact Material Design swatches. Example: <code>background: --colour-accent(blue, 700);</code></span></div></div>
+    </section>
+    <section class="section" id="usage"><div class="section-heading"><div><span class="section-number">04 / Putting it together</span><h2>In real components.</h2><p>Copy a function into any CSS property that accepts a colour.</p></div></div><div class="usage-grid"><div class="usage-tile surface"><h3>A familiar API. Native implementation.</h3><p>The helpers delegate to a single palette function. Change the active swatch above and this whole component updates.</p><pre class="code-window"><code><span class="syntax-purple">.card</span> {
+  <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-tint</span>(blue, <span class="syntax-yellow">90%</span>);
+  <span class="syntax-blue">border-color</span>: <span class="syntax-green">--colour</span>(blue);
+}
+
+<span class="syntax-purple">.card:hover</span> {
+  <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-lighten</span>(blue, <span class="syntax-yellow">12</span>);
+}
+
+<span class="syntax-purple">.overlay</span> {
+  <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-opacity</span>(black, <span class="syntax-yellow">.5</span>);
+}</code></pre></div><div class="usage-tile surface"><h3>Every colour has an entire system.</h3><p>The demo itself uses function calls, not hard-coded swatches. Tint, base, and shade together produce the tonal grouping below.</p><div class="runtime-demo"><div><strong>A more expressive palette.</strong><p>From a single named value to a full colour system.</p></div><div class="runtime-spheres" aria-hidden="true"><i></i><i></i><i></i></div></div></div></div>
+    </section>
+  </div>
+</main>
+<footer class="footer"><div class="footer-inner"><span><strong>colour</strong> · Experimental native CSS port of <a href="https://github.com/Phunky/colour" target="_blank" rel="noopener noreferrer">Phunky/colour</a></span><span>0 JavaScript · Single source of colour truth · Requires CSS custom functions</span></div></footer>
+</body>
+</html>

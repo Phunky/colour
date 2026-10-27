@@ -1,0 +1,96 @@
+/*
+ * colour-function-only.css
+ * Experimental, pure CSS rewrite of https://github.com/Phunky/colour
+ *
+ * The named palette has ONE source of truth: --colour().
+ * No global colour custom properties are declared.
+ * Helpers delegate to --colour() and return colours at computed-value time.
+ *
+ * Browser requirements: CSS custom @function, CSS if(style()), and
+ * relative color syntax. Not supported in all browsers.
+ * Lightness/saturation adjustments use HSL percentage points (0–100).
+ */
+
+/* Original Material Design base palette. No :root variable duplication. */
+@function --colour(--name <custom-ident>) returns <color> {
+  result: if(
+    style(--name: red): #f44336;
+    style(--name: pink): #e91e63;
+    style(--name: purple): #9c27b0;
+    style(--name: deep-purple): #673ab7;
+    style(--name: indigo): #3f51b5;
+    style(--name: blue): #2196f3;
+    style(--name: light-blue): #03a9f4;
+    style(--name: cyan): #00bcd4;
+    style(--name: teal): #009688;
+    style(--name: green): #4caf50;
+    style(--name: light-green): #8bc34a;
+    style(--name: lime): #cddc39;
+    style(--name: yellow): #ffeb3b;
+    style(--name: amber): #ffc107;
+    style(--name: orange): #ff9800;
+    style(--name: deep-orange): #ff5722;
+    style(--name: brown): #795548;
+    style(--name: grey): #9e9e9e;
+    style(--name: blue-grey): #607d8b;
+    style(--name: black): #000;
+    style(--name: white): #fff;
+    else: transparent
+  );
+}
+
+@function --colour-lighten(--name <custom-ident>, --points <number>) returns <color> {
+  result: hsl(from --colour(var(--name)) h s clamp(0, calc(l + var(--points)), 100) / alpha);
+}
+
+@function --colour-darken(--name <custom-ident>, --points <number>) returns <color> {
+  result: hsl(from --colour(var(--name)) h s clamp(0, calc(l - var(--points)), 100) / alpha);
+}
+
+@function --colour-saturate(--name <custom-ident>, --points <number>) returns <color> {
+  result: hsl(from --colour(var(--name)) h clamp(0, calc(s + var(--points)), 100) l / alpha);
+}
+
+@function --colour-desaturate(--name <custom-ident>, --points <number>) returns <color> {
+  result: hsl(from --colour(var(--name)) h clamp(0, calc(s - var(--points)), 100) l / alpha);
+}
+
+@function --colour-adjust-hue(--name <custom-ident>, --degrees <number>) returns <color> {
+  result: hsl(from --colour(var(--name)) calc(h + var(--degrees)) s l / alpha);
+}
+
+/* tint/shade use sRGB interpolation rather than HSL lightness adjustment. */
+@function --colour-tint(--name <custom-ident>, --weight <percentage>) returns <color> {
+  result: color-mix(in srgb, --colour(var(--name)), white var(--weight));
+}
+
+@function --colour-shade(--name <custom-ident>, --weight <percentage>) returns <color> {
+  result: color-mix(in srgb, --colour(var(--name)), black var(--weight));
+}
+
+@function --colour-rgba(--name <custom-ident>, --alpha <number>) returns <color> {
+  result: rgb(from --colour(var(--name)) r g b / var(--alpha));
+}
+
+@function --colour-opacity(--name <custom-ident>, --alpha <number>) returns <color> {
+  result: --colour-rgba(var(--name), var(--alpha));
+}
+
+/* Original repo's HSL point shifts for Material-style accent weights.
+   500 is the base colour, 1000 is its nonstandard extra-dark shade. */
+@function --colour-accent(--name <custom-ident>, --level <integer>) returns <color> {
+  --offset: if(
+    style(--level: 50): 36;
+    style(--level: 100): 34;
+    style(--level: 200): 31.5;
+    style(--level: 300): 26;
+    style(--level: 400): 12;
+    style(--level: 500): 0;
+    style(--level: 600): -16;
+    style(--level: 700): -24;
+    style(--level: 800): -36;
+    style(--level: 900): -49;
+    style(--level: 1000): -62
+  );
+  result: hsl(from --colour(var(--name)) h s clamp(0, calc(l + var(--offset)), 100) / alpha);
+}
