@@ -74,7 +74,7 @@ main:has(#mix-black:checked) { --mix-with: --colour(black); --mix-name: "black";
 .active-name::before { content: var(--name); }
 .mix-name::before { content: var(--mix-name); }
 .playground { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 32px; align-items: start; }
-.preview { background: var(--active); color: var(--on-active); border-radius: 18px; padding: 28px; min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; box-shadow: inset 0 0 0 1px #0000000f; }
+.preview { position: sticky; top: 24px; background: var(--active); color: var(--on-active); border-radius: 18px; padding: 28px; min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; box-shadow: inset 0 0 0 1px #0000000f; }
 .preview-name { font-size: 44px; font-weight: 800; letter-spacing: -1.6px; line-height: 1; }
 .preview .code { background: --colour-opacity(0.12); color: inherit; }
 .contrast-result, .is-black, .is-white { display: none; }
@@ -82,13 +82,20 @@ main:has(#mix-black:checked) { --mix-with: --colour(black); --mix-name: "black";
 @container style(--on-active: white) { .contrast-result, .is-white { display: inline; } }
 .variations { display: grid; gap: 22px; }
 .variation h3 small, .scale h3 small { font-weight: 500; color: #7a8693; font-size: 13px; margin-left: 6px; }
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.tiles { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 12px; margin-top: 10px; }
 .tile i { display: block; height: 64px; border-radius: 12px; box-shadow: inset 0 0 0 1px #0000000f; }
 .tile figcaption { margin-top: 7px; font-size: 12px; color: #4b5a69; overflow-wrap: anywhere; }
 .tile[data-fn="lighten"] i { background: --colour-lighten(15, var(--active)); }
 .tile[data-fn="darken"] i { background: --colour-darken(15, var(--active)); }
+.tile[data-fn="saturate"] i { background: --colour-saturate(30, var(--active)); }
+.tile[data-fn="desaturate"] i { background: --colour-desaturate(40, var(--active)); }
 .tile[data-fn="tint"] i { background: --colour-tint(50%, var(--active)); }
 .tile[data-fn="shade"] i { background: --colour-shade(40%, var(--active)); }
+.alpha i { position: relative; background: repeating-conic-gradient(#e6e9ed 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+.alpha i::before { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.tile[data-fn="opacity"] i::before { background: --colour-opacity(0.5, var(--active)); }
+.tile[data-fn="rgba"] i::before { background: --colour-rgba(0.25, var(--active)); }
+.tile[data-fn="fade"] i::before { background: --colour-fade(0.5, --colour-opacity(0.6, var(--active))); }
 .scales { display: grid; gap: 28px; margin-top: 44px; }
 .scale p { margin-top: 2px; font-size: 12px; color: #4b5a69; }
 .scale-steps { display: flex; gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; }
@@ -126,15 +133,7 @@ main:has(#scheme-dark:checked) .stage { color-scheme: dark; }
 .button { --base: --colour-tone(65%, --colour-mix(35%, blue, purple)); --background: var(--base); background: var(--background); color: #000; color: --colour-contrast(var(--background)); border-color: --colour-darken(15, var(--background)); &:hover, &:focus-visible { --background: --colour-darken(10, var(--base)); } }
 /* The compiled demo needs an explicit hover foreground on older browsers. */
 @supports not (color: contrast-color(red)) { .button:is(:hover, :focus-visible) { color: #fff; } }
-/* Get started */
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 28px; }
-.steps p { margin: 6px 0 12px; color: #4b5a69; font-size: 14px; }
-.reference-title { margin-top: 48px; }
-.reference { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; margin: 12px 0 0; }
-.reference div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; padding: 9px 0; border-bottom: 1px solid #eceff2; font-size: 13px; }
-.reference dd { margin: 0; color: #5b6876; }
-.reference-note { margin-top: 18px; font-size: 14px; color: #4b5a69; }
 .footer { padding-top: 28px; padding-bottom: 40px; border-top: 1px solid #eceff2; font-size: 13px; color: #6b7785; }
-@media (max-width: 860px) { .hero, .playground, .compose { grid-template-columns: 1fr; } .hero { gap: 36px; padding-top: 40px; } .steps { grid-template-columns: 1fr; gap: 20px; } .reference { grid-template-columns: 1fr; } .current { grid-template-columns: 1fr; } .current .code { grid-row: auto; } }
+@media (max-width: 860px) { .hero, .playground, .compose { grid-template-columns: 1fr; } .preview { position: static; } .hero { gap: 36px; padding-top: 40px; } .current { grid-template-columns: 1fr; } .current .code { grid-row: auto; } }
 @media (max-width: 520px) { .site-header, main, .footer { padding-left: 18px; padding-right: 18px; } .site-header { flex-direction: column; align-items: flex-start; } .section { padding: 52px 0; } .preview { min-height: 260px; padding: 22px; } .preview-name { font-size: 36px; } .code { font-size: 11.5px; padding: 12px; } .palette { gap: 8px; } .scale-steps { gap: 3px; } .scale-steps li { font-size: 9px; } .scale-steps i { height: 40px; border-radius: 6px; } }
 @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } .palette-option { transition: none; } }

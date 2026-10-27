@@ -12,7 +12,7 @@
 <div class="support-warning" role="note">This page uses native CSS <code>@function</code>, available in Chrome and Edge 139+. <a href="index.html">Open the compatible build</a>.</div>
 <header class="site-header">
   <a class="brand" href="#top">colour</a>
-  <nav class="nav" aria-label="Main"><a href="#playground">Playground</a><a href="#composition">Composition</a><a href="#get-started">Get started</a><a href="https://github.com/Phunky/colour">GitHub</a></nav>
+  <nav class="nav" aria-label="Main"><a href="#playground">Playground</a><a href="#composition">Composition</a><a href="https://github.com/Phunky/colour">GitHub</a></nav>
 </header>
 <main id="top">
   <section class="hero" aria-labelledby="hero-title">
@@ -69,9 +69,18 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
           <figure class="tile" data-fn="lighten"><i></i><figcaption><code>--colour-lighten(15, <span class="active-name"></span>)</code></figcaption></figure>
           <figure class="tile" data-fn="darken"><i></i><figcaption><code>--colour-darken(15, <span class="active-name"></span>)</code></figcaption></figure>
         </div></div>
+        <div class="variation"><h3>Saturate &amp; desaturate <small>HSL saturation</small></h3><div class="tiles">
+          <figure class="tile" data-fn="saturate"><i></i><figcaption><code>--colour-saturate(30, <span class="active-name"></span>)</code></figcaption></figure>
+          <figure class="tile" data-fn="desaturate"><i></i><figcaption><code>--colour-desaturate(40, <span class="active-name"></span>)</code></figcaption></figure>
+        </div></div>
         <div class="variation"><h3>Tint &amp; shade <small>mixed with white or black</small></h3><div class="tiles">
           <figure class="tile" data-fn="tint"><i></i><figcaption><code>--colour-tint(50%, <span class="active-name"></span>)</code></figcaption></figure>
           <figure class="tile" data-fn="shade"><i></i><figcaption><code>--colour-shade(40%, <span class="active-name"></span>)</code></figcaption></figure>
+        </div></div>
+        <div class="variation"><h3>Opacity &amp; fade <small>set or multiply alpha</small></h3><div class="tiles alpha">
+          <figure class="tile" data-fn="opacity"><i></i><figcaption><code>--colour-opacity(0.5, <span class="active-name"></span>)</code></figcaption></figure>
+          <figure class="tile" data-fn="rgba"><i></i><figcaption><code>--colour-rgba(0.25, <span class="active-name"></span>)</code></figcaption></figure>
+          <figure class="tile" data-fn="fade"><i></i><figcaption><code>--colour-fade(0.5, --colour-opacity(0.6, <span class="active-name"></span>))</code></figcaption></figure>
         </div></div>
       </div>
     </div>
@@ -91,6 +100,24 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
 <li><i style="background: --colour-accent(800, var(--active));"></i>800</li>
 <li><i style="background: --colour-accent(900, var(--active));"></i>900</li>
 <li><i style="background: --colour-accent(1000, var(--active));"></i>1000</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="adjust-hue">
+        <h3>Adjust hue <small>HSL hue rotation in degrees</small></h3>
+        <p><code>--colour-adjust-hue(degrees, <span class="active-name"></span>)</code></p>
+        <ol class="scale-steps">
+<li class="is-base"><i style="background: --colour-adjust-hue(0, var(--active));"></i>0°</li>
+<li><i style="background: --colour-adjust-hue(30, var(--active));"></i>30°</li>
+<li><i style="background: --colour-adjust-hue(60, var(--active));"></i>60°</li>
+<li><i style="background: --colour-adjust-hue(90, var(--active));"></i>90°</li>
+<li><i style="background: --colour-adjust-hue(120, var(--active));"></i>120°</li>
+<li><i style="background: --colour-adjust-hue(150, var(--active));"></i>150°</li>
+<li><i style="background: --colour-adjust-hue(180, var(--active));"></i>180°</li>
+<li><i style="background: --colour-adjust-hue(210, var(--active));"></i>210°</li>
+<li><i style="background: --colour-adjust-hue(240, var(--active));"></i>240°</li>
+<li><i style="background: --colour-adjust-hue(270, var(--active));"></i>270°</li>
+<li><i style="background: --colour-adjust-hue(300, var(--active));"></i>300°</li>
+<li><i style="background: --colour-adjust-hue(330, var(--active));"></i>330°</li>
         </ol>
       </div>
       <div class="scale" data-fn="tone">
@@ -192,33 +219,6 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
   }
 }</code></pre>
     </div>
-  </section>
-
-  <section class="section" id="get-started" aria-labelledby="get-started-title">
-    <h2 id="get-started-title">Get started</h2>
-    <div class="steps">
-      <div><h3>1. Add the stylesheet</h3><p>Copy <a href="https://github.com/Phunky/colour/blob/master/src/colour.css"><code>src/colour.css</code></a> into your project.</p><pre class="code"><code>&lt;link rel="stylesheet" href="colour.css"&gt;</code></pre></div>
-      <div><h3>2. Use the functions</h3><p>Anywhere CSS accepts a colour.</p><pre class="code"><code>.button {
-  background: --colour(blue);
-  color: --colour-contrast(blue);
-}</code></pre></div>
-      <div><h3>3. Check browser support</h3><p>Native CSS functions need Chrome or Edge 139+. This page also ships a build-time compiled version for Safari and Firefox.</p></div>
-    </div>
-    <h3 class="reference-title">Functions</h3>
-    <dl class="reference">
-      <div><dt><code>--colour(c)</code></dt><dd>Palette colour by name; any CSS colour passes through</dd></div>
-      <div><dt><code>--colour-lighten(n, c)</code> <code>--colour-darken(n, c)</code></dt><dd>HSL lightness ± n points</dd></div>
-      <div><dt><code>--colour-saturate(n, c)</code> <code>--colour-desaturate(n, c)</code></dt><dd>HSL saturation ± n points</dd></div>
-      <div><dt><code>--colour-adjust-hue(deg, c)</code></dt><dd>Rotate the hue</dd></div>
-      <div><dt><code>--colour-tint(%, c)</code> <code>--colour-shade(%, c)</code></dt><dd>Mix with white or black</dd></div>
-      <div><dt><code>--colour-tone(%, c)</code></dt><dd>Set OKLCH lightness</dd></div>
-      <div><dt><code>--colour-chroma(×, c)</code></dt><dd>Scale OKLCH chroma</dd></div>
-      <div><dt><code>--colour-mix(%, c1, c2)</code></dt><dd>Mix two colours in OKLCH</dd></div>
-      <div><dt><code>--colour-opacity(α, c)</code> <code>--colour-fade(×, c)</code></dt><dd>Set or multiply alpha</dd></div>
-      <div><dt><code>--colour-accent(level, c)</code></dt><dd>Material-style shade, 50–1000</dd></div>
-      <div><dt><code>--colour-contrast(bg)</code></dt><dd>Black or white text for a background</dd></div>
-    </dl>
-    <p class="reference-note"><code>c</code> is optional and defaults to <code>currentColor</code>, except in <code>--colour-mix()</code> and <code>--colour-contrast()</code>. The <a href="https://github.com/Phunky/colour#readme">README</a> has the full API, browser support and more examples.</p>
   </section>
 </main>
 <footer class="footer"><p>colour began in 2015 as a Sass library by <a href="https://github.com/Phunky">Phunky</a>. <span class="build-note">Native CSS build · <a href="index.html">Compatible build</a></span></p></footer>
