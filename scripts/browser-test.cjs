@@ -338,7 +338,7 @@ async function openDemo(browser, file, { legacy = false, osScheme = 'light', wid
     const filePath = path.join(root, 'dist', name);
     if (!fs.existsSync(filePath)) return route.fulfill({ status: 404 });
     let body = fs.readFileSync(filePath, 'utf8');
-    if (legacy && name.endsWith('.css')) body = body.replaceAll('@supports (color: contrast-color(red))', '@supports (color: no-such-function(red))');
+    if (legacy && name.endsWith('.css')) body = body.replaceAll('(color: contrast-color(red))', '(color: no-such-function(red))');
     return route.fulfill({ contentType: name.endsWith('.css') ? 'text/css' : 'text/html', body });
   });
   await page.goto(`http://demo.test/${file}`);
