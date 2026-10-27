@@ -58,6 +58,12 @@ main:has(#tone-grey:checked) { --active: --colour(grey); --on-active: --colour-c
 main:has(#tone-blue-grey:checked) { --active: --colour(blue-grey); --on-active: --colour-contrast(blue-grey); --name: "blue-grey"; }
 main:has(#tone-black:checked) { --active: --colour(black); --on-active: --colour-contrast(black); --name: "black"; }
 main:has(#tone-white:checked) { --active: --colour(white); --on-active: --colour-contrast(white); --name: "white"; }
+main { --mix-with: --colour(pink); --mix-name: "pink"; }
+main:has(#mix-amber:checked) { --mix-with: --colour(amber); --mix-name: "amber"; }
+main:has(#mix-teal:checked) { --mix-with: --colour(teal); --mix-name: "teal"; }
+main:has(#mix-deep-orange:checked) { --mix-with: --colour(deep-orange); --mix-name: "deep-orange"; }
+main:has(#mix-white:checked) { --mix-with: --colour(white); --mix-name: "white"; }
+main:has(#mix-black:checked) { --mix-with: --colour(black); --mix-name: "black"; }
 .palette { display: flex; flex-wrap: wrap; gap: 10px; border: 0; padding: 0; margin: 28px 0 24px; }
 .palette-option { position: relative; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; background: var(--swatch); box-shadow: inset 0 0 0 1px #0000001f; transition: transform .12s; }
 .palette-option:hover { transform: scale(1.12); }
@@ -66,6 +72,7 @@ main:has(#tone-white:checked) { --active: --colour(white); --on-active: --colour
 /* Radio rings use :focus because WebKit drops :focus-visible when arrow keys move the selection. */
 .palette-option:has(input:focus) { outline: 2px solid #1d6fd8; outline-offset: 6px; }
 .active-name::before { content: var(--name); }
+.mix-name::before { content: var(--mix-name); }
 .playground { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 32px; align-items: start; }
 .preview { background: var(--active); color: var(--on-active); border-radius: 18px; padding: 28px; min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; box-shadow: inset 0 0 0 1px #0000000f; }
 .preview-name { font-size: 44px; font-weight: 800; letter-spacing: -1.6px; line-height: 1; }
@@ -88,6 +95,12 @@ main:has(#tone-white:checked) { --active: --colour(white); --on-active: --colour
 .scale-steps li { flex: 1 1 0; min-width: 0; text-align: center; font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #6b7785; }
 .scale-steps i { display: block; height: 52px; margin-bottom: 7px; border-radius: 8px; box-shadow: inset 0 0 0 1px #0000000f; }
 .scale-steps .is-base { color: #18212b; font-weight: 700; }
+.mix-picker { display: flex; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; margin: 10px 0 8px; }
+.mix-option { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #4b5a69; cursor: pointer; box-shadow: inset 0 0 0 1px #e1e5ea; }
+.mix-option i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px #0000001f; }
+.mix-option input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.mix-option:has(input:checked) { color: #18212b; box-shadow: inset 0 0 0 2px #18212b; }
+.mix-option:has(input:focus) { outline: 2px solid #1d6fd8; outline-offset: 2px; }
 .current { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px 32px; align-items: center; margin-top: 44px; padding-top: 28px; border-top: 1px dashed #e1e5ea; }
 .current > p:first-child { color: #4b5a69; max-width: 520px; }
 .current .code { grid-row: span 2; }

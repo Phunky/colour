@@ -121,6 +121,31 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
 <li><i style="background: --colour-chroma(1.5, var(--active));"></i>×1.5</li>
         </ol>
       </div>
+      <div class="scale" data-fn="mix">
+        <h3>Mix <small>OKLCH, the weight is the second colour's share</small></h3>
+        <fieldset class="mix-picker"><legend class="sr-only">Mix with</legend>
+<label class="mix-option"><input id="mix-pink" type="radio" name="mix" value="pink" checked><i style="background: --colour(pink);"></i>pink</label>
+<label class="mix-option"><input id="mix-amber" type="radio" name="mix" value="amber"><i style="background: --colour(amber);"></i>amber</label>
+<label class="mix-option"><input id="mix-teal" type="radio" name="mix" value="teal"><i style="background: --colour(teal);"></i>teal</label>
+<label class="mix-option"><input id="mix-deep-orange" type="radio" name="mix" value="deep-orange"><i style="background: --colour(deep-orange);"></i>deep-orange</label>
+<label class="mix-option"><input id="mix-white" type="radio" name="mix" value="white"><i style="background: --colour(white);"></i>white</label>
+<label class="mix-option"><input id="mix-black" type="radio" name="mix" value="black"><i style="background: --colour(black);"></i>black</label>
+        </fieldset>
+        <p><code>--colour-mix(weight, <span class="active-name"></span>, <span class="mix-name"></span>)</code></p>
+        <ol class="scale-steps">
+<li class="is-base"><i style="background: --colour-mix(0%, var(--active), var(--mix-with));"></i>0%</li>
+<li><i style="background: --colour-mix(10%, var(--active), var(--mix-with));"></i>10%</li>
+<li><i style="background: --colour-mix(20%, var(--active), var(--mix-with));"></i>20%</li>
+<li><i style="background: --colour-mix(30%, var(--active), var(--mix-with));"></i>30%</li>
+<li><i style="background: --colour-mix(40%, var(--active), var(--mix-with));"></i>40%</li>
+<li><i style="background: --colour-mix(50%, var(--active), var(--mix-with));"></i>50%</li>
+<li><i style="background: --colour-mix(60%, var(--active), var(--mix-with));"></i>60%</li>
+<li><i style="background: --colour-mix(70%, var(--active), var(--mix-with));"></i>70%</li>
+<li><i style="background: --colour-mix(80%, var(--active), var(--mix-with));"></i>80%</li>
+<li><i style="background: --colour-mix(90%, var(--active), var(--mix-with));"></i>90%</li>
+<li class="is-base"><i style="background: --colour-mix(100%, var(--active), var(--mix-with));"></i>100%</li>
+        </ol>
+      </div>
     </div>
     <div class="current">
       <p>Leave out the colour and a function uses <code>currentColor</code>, so one rule adapts to any text colour.</p>
