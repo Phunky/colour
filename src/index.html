@@ -13,12 +13,12 @@
 <div class="support-warning" role="note">This demo uses experimental CSS <code>@function</code> and <code>if()</code>. To see the live functions, open it in Chrome or Edge 139+; other browsers may show empty swatches.</div>
 <header class="site-header"><div class="topbar">
   <a class="brand" href="#top" aria-label="colour home"><span class="brandmark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-name">colour<span> / native CSS</span></span></a>
-  <nav class="navlinks" aria-label="Main navigation"><a href="#playground">Playground</a><a href="#functions">Functions</a><a href="#accents">Accents</a><a href="#composition">Composition</a><a class="github-link" href="https://github.com/Phunky/colour" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+  <nav class="navlinks" aria-label="Main navigation"><a href="#playground">Playground</a><a href="#functions">Functions</a><a href="#accents">Accents</a><a href="#composition">Composition</a><a href="#contrast">Contrast</a><a class="github-link" href="https://github.com/Phunky/colour" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
 </div></header>
 <main id="top">
   <div class="content">
     <section class="hero" aria-label="Introduction">
-      <div class="hero-copy"><span class="eyebrow">11 years later · no Sass required</span><h1>A palette.<br><span>No variables.</span><br>Just CSS.</h1><p>The complete colour toolkit, rebuilt around native CSS functions. One source of truth. Every shade computed by the browser. No Sass, no JavaScript.</p><div class="hero-tags"><span class="hero-tag"><span>●</span> 21 named colours</span><span class="hero-tag"><span>●</span> 11 CSS functions</span><span class="hero-tag"><span>●</span> Composable</span><span class="hero-tag"><span>●</span> Zero JS</span></div></div>
+      <div class="hero-copy"><span class="eyebrow">11 years later · no Sass required</span><h1>A palette.<br><span>No variables.</span><br>Just CSS.</h1><p>The complete colour toolkit, rebuilt around native CSS functions. One source of truth. Every shade computed by the browser. No Sass, no JavaScript.</p><div class="hero-tags"><span class="hero-tag"><span>●</span> 21 named colours</span><span class="hero-tag"><span>●</span> 12 CSS functions</span><span class="hero-tag"><span>●</span> Composable</span><span class="hero-tag"><span>●</span> Zero JS</span></div></div>
       <div class="hero-art" aria-hidden="true"><div class="art-grid"></div><div class="art-orb orb-pink"></div><div class="art-orb orb-blue"></div><div class="art-orb orb-amber"></div><div class="art-code">background: <b>--colour(blue)</b>;</div></div>
     </section>
     <section class="section" id="playground"><div class="section-heading"><div><span class="section-number">01 / Interactive palette</span><h2>Choose a colour. See everything change.</h2><p>The controls below are CSS radio inputs. The styling is powered entirely by native functions.</p></div><span class="eyebrow-pill">:has() + @function</span></div>
@@ -143,7 +143,76 @@
 )</code></pre></div></article>
       </div>
     </section>
-    <section class="section" id="usage"><div class="section-heading"><div><span class="section-number">05 / Putting it together</span><h2>In real components.</h2><p>Copy a function into any CSS property that accepts a colour.</p></div></div><div class="usage-grid"><div class="usage-tile surface"><h3>A familiar API. Native implementation.</h3><p>The helpers delegate to a single palette function. Change the active swatch above and this whole component updates.</p><pre class="code-window"><code><span class="syntax-purple">.card</span> {
+    <section class="section" id="contrast"><div class="section-heading"><div><span class="section-number">05 / Automatic text contrast</span><h2>Readable text on any background.</h2><p><code>--colour-contrast(background)</code> asks the browser's native <code>contrast-color()</code> for black or white, whichever contrasts more.</p></div><span class="eyebrow-pill">contrast-color()</span></div>
+      <div class="contrast-chips">
+<div class="contrast-chip contrast-sample" data-colour="red"><strong>red</strong><code>--colour-contrast(red)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="pink"><strong>pink</strong><code>--colour-contrast(pink)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="purple"><strong>purple</strong><code>--colour-contrast(purple)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="deep-purple"><strong>deep-purple</strong><code>--colour-contrast(deep-purple)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="indigo"><strong>indigo</strong><code>--colour-contrast(indigo)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="blue"><strong>blue</strong><code>--colour-contrast(blue)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="light-blue"><strong>light-blue</strong><code>--colour-contrast(light-blue)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="cyan"><strong>cyan</strong><code>--colour-contrast(cyan)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="teal"><strong>teal</strong><code>--colour-contrast(teal)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="green"><strong>green</strong><code>--colour-contrast(green)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="light-green"><strong>light-green</strong><code>--colour-contrast(light-green)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="lime"><strong>lime</strong><code>--colour-contrast(lime)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="yellow"><strong>yellow</strong><code>--colour-contrast(yellow)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="amber"><strong>amber</strong><code>--colour-contrast(amber)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="orange"><strong>orange</strong><code>--colour-contrast(orange)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="deep-orange"><strong>deep-orange</strong><code>--colour-contrast(deep-orange)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="brown"><strong>brown</strong><code>--colour-contrast(brown)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="grey"><strong>grey</strong><code>--colour-contrast(grey)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="blue-grey"><strong>blue-grey</strong><code>--colour-contrast(blue-grey)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="black"><strong>black</strong><code>--colour-contrast(black)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+<div class="contrast-chip contrast-sample" data-colour="white"><strong>white</strong><code>--colour-contrast(white)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
+      </div>
+      <div class="compose-toolbar"><span>Background for the <strong>dynamic</strong> example:</span><div class="ink-chips">
+<label for="ink-blue" style="color: --colour(blue);"><i aria-hidden="true"></i>blue</label>
+<label for="ink-red" style="color: --colour(red);"><i aria-hidden="true"></i>red</label>
+<label for="ink-pink" style="color: --colour(pink);"><i aria-hidden="true"></i>pink</label>
+<label for="ink-purple" style="color: --colour(purple);"><i aria-hidden="true"></i>purple</label>
+<label for="ink-teal" style="color: --colour(teal);"><i aria-hidden="true"></i>teal</label>
+<label for="ink-amber" style="color: --colour(amber);"><i aria-hidden="true"></i>amber</label>
+      </div></div>
+      <div class="contrast-grid">
+<article class="contrast-card surface" data-example="light"><div class="contrast-sample"><strong>Light background</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: --colour-tint(85%, deep-purple);
+color: --colour-contrast(
+  --colour-tint(85%, deep-purple)
+);</code></pre></div></article>
+<article class="contrast-card surface" data-example="dark"><div class="contrast-sample"><strong>Dark background</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: --colour-shade(70%, yellow);
+color: --colour-contrast(
+  --colour-shade(70%, yellow)
+);</code></pre></div></article>
+<article class="contrast-card surface" data-example="darken"><div class="contrast-sample"><strong>Darkened blue</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: --colour-darken(15, blue);
+color: --colour-contrast(
+  --colour-darken(15, blue)
+);</code></pre></div></article>
+<article class="contrast-card surface" data-example="nested"><div class="contrast-sample"><strong>Nested lighten/darken</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: --colour-lighten(
+  30, --colour-darken(10, indigo)
+);
+color: --colour-contrast(
+  --colour-lighten(30, --colour-darken(10, indigo))
+);</code></pre></div></article>
+<article class="contrast-card surface" data-example="hex"><div class="contrast-sample"><strong>Hex colour</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: #6750a4;
+color: --colour-contrast(#6750a4);</code></pre></div></article>
+<article class="contrast-card surface" data-example="oklch"><div class="contrast-sample"><strong>OKLCH colour</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: oklch(85% 0.1 200);
+color: --colour-contrast(oklch(85% 0.1 200));</code></pre></div></article>
+<article class="contrast-card surface" data-example="custom-property"><div class="contrast-sample"><strong>Custom property</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: var(--brand);
+color: --colour-contrast(var(--brand));</code></pre></div></article>
+<article class="contrast-card surface" data-example="dynamic"><div class="contrast-sample"><strong>Dynamic background</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: var(--ink);
+color: --colour-contrast(var(--ink));</code></pre></div></article>
+<article class="contrast-card surface" data-example="translucent"><div class="contrast-sample"><strong>Translucent background</strong><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div><div class="operation-body"><pre class="code-box"><code>background: --colour-opacity(
+  0.8,
+  --colour-lighten(20, red)
+);
+color: --colour-contrast(
+  --colour-opacity(0.8, --colour-lighten(20, red))
+);</code></pre></div></article>
+      </div>
+      <p class="contrast-note">The result is always black or white, never a complementary colour. Alpha is ignored: for the translucent example, the choice is made as if the background were opaque, regardless of what shows through. Gradients and images are not considered either, so check real-world contrast visually. In the compatible build, browsers without <code>contrast-color()</code> use a black/white choice computed at build time with the WCAG 2.1 contrast ratio where the background is known (palette, hex, <code>rgb()</code>/<code>hsl()</code> and their transformations). Runtime backgrounds (<code>var()</code>, <code>oklch()</code>, <code>currentColor</code>) fall back to the declared default.</p>
+    </section>
+    <section class="section" id="usage"><div class="section-heading"><div><span class="section-number">06 / Putting it together</span><h2>In real components.</h2><p>Copy a function into any CSS property that accepts a colour.</p></div></div><div class="usage-grid"><div class="usage-tile surface"><h3>A familiar API. Native implementation.</h3><p>The helpers delegate to a single palette function. Change the active swatch above and this whole component updates.</p><pre class="code-window"><code><span class="syntax-purple">.card</span> {
   <span class="syntax-blue">color</span>: <span class="syntax-green">--colour</span>(blue);
   <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-tint</span>(<span class="syntax-yellow">90%</span>);
   <span class="syntax-blue">border-color</span>: <span class="syntax-green">--colour</span>();

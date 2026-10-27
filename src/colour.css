@@ -2,8 +2,8 @@
  * colour.css
  * Experimental, pure CSS rewrite of https://github.com/Phunky/colour
  *
- * API: transformation first, colour last. The colour argument is optional,
- * defaults to currentColor, and accepts a palette name or any CSS <color>
+ * API: transformation first, colour last. The colour argument is optional
+ * (except for --colour-contrast()), defaults to currentColor, and accepts a palette name or any CSS <color>
  * (hex, rgb(), hsl(), oklch(), color-mix(), var(), or another --colour-*() result).
  *
  * The named palette has ONE source of truth: --colour().
@@ -14,8 +14,8 @@
  * The colour parameter is typed <custom-ident> | <color> so palette names stay
  * identifiers for matching, while every other colour passes through unchanged.
  *
- * Browser requirements: CSS custom @function, CSS if(style()), and
- * relative color syntax. Not supported in all browsers.
+ * Browser requirements: CSS custom @function, CSS if(style()), relative
+ * color syntax and contrast-color(). Not supported in all browsers.
  * Lightness/saturation adjustments use HSL percentage points (0–100).
  *
  * Helpers never call each other (only --colour()): Chromium currently rejects
@@ -87,6 +87,14 @@
 /* Alias of --colour-rgba(); see the header for why it does not delegate. */
 @function --colour-opacity(--alpha <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
   result: rgb(from --colour(var(--value)) r g b / var(--alpha));
+}
+
+/* Black or white, whichever contrasts more with the background, chosen by the
+   browser's contrast-color(). The background is required (no currentColor
+   default) and its alpha is ignored, so translucent backgrounds need testing
+   against whatever is rendered beneath them. */
+@function --colour-contrast(--background type(<custom-ident> | <color>)) returns <color> {
+  result: contrast-color(--colour(var(--background)));
 }
 
 /* Original repo's HSL point shifts for Material-style accent weights.

@@ -16,7 +16,30 @@ const write = (p, v) => fs.writeFileSync(path.join(root, p), v, 'utf8');
 const colourSource = read('src/colour.css');
 const demoSource = read('src/demo.css');
 const htmlSource = read('src/index.html');
-const { compileValue, palette, accent } = createCompiler(colourSource);
+const { compileValue, compileFallback, usesContrast, palette, accent } = createCompiler(colourSource);
+const CONTRAST_SUPPORTS = '(color: contrast-color(red))';
+
+/*
+ * --colour-contrast() compiles to contrast-color() inside @supports, so older
+ * browsers keep the rule's static WCAG fallback (when the background is known
+ * at build time) or any fallback declared earlier by the author. Plain
+ * cascade fallbacks are not enough: declarations containing var() and custom
+ * properties are always valid at parse time.
+ */
+function compileContrast(decl, from) {
+  const rule = decl.parent;
+  if (rule.type !== 'rule') throw Error(`${from}: --colour-contrast() is only supported inside style rules`);
+  let supports = rule.next();
+  if (!(supports && supports.type === 'atrule' && supports.name === 'supports' && supports.params === CONTRAST_SUPPORTS && supports.first.selector === rule.selector)) {
+    supports = postcss.atRule({ name: 'supports', params: CONTRAST_SUPPORTS });
+    supports.append(postcss.rule({ selector: rule.selector }));
+    rule.after(supports);
+  }
+  supports.first.append(decl.clone({ value: compileValue(decl.value) }));
+  const fallback = compileFallback(decl.value);
+  if (fallback === null) decl.remove();
+  else decl.value = fallback;
+}
 
 function compileDeclarations(css, from) {
   const tree = postcss.parse(css, { from });
@@ -27,8 +50,10 @@ function compileDeclarations(css, from) {
   });
   tree.walkDecls(decl => {
     if (decl.value.includes('--native-supported()')) { decl.remove(); return; }
+    if (decl.parent.type === 'rule' && decl.parent.parent.type === 'atrule' && decl.parent.parent.params === CONTRAST_SUPPORTS) return;
     try {
-      decl.value = compileValue(decl.value);
+      if (usesContrast(decl.value)) compileContrast(decl, from);
+      else decl.value = compileValue(decl.value);
     } catch (error) {
       throw Error(`${from}:${decl.source.start.line} ${decl.prop}: ${error.message}`);
     }
@@ -48,7 +73,14 @@ if (/@function\b|\bif\s*\(\s*style\(|--[\w-]+\(/.test(compatOutput.replace(/\/\*
 function compileInlineStyles(html) {
   return html.replace(/ style="([^"]*)"/g, (_, style) => {
     const rule = postcss.parse(`x{${style}}`, { from: 'src/index.html' }).first;
-    const compiled = rule.nodes.map(d => `${d.prop}: ${compileValue(d.value)};`).join(' ');
+    const compiled = rule.nodes.map(d => {
+      if (!usesContrast(d.value)) return `${d.prop}: ${compileValue(d.value)};`;
+      const fallback = compileFallback(d.value);
+      if (fallback === null || d.prop.startsWith('--')) {
+        throw Error(`src/index.html inline ${d.prop}: --colour-contrast() needs a stylesheet rule unless its background is static and the property is not custom`);
+      }
+      return `${d.prop}: ${fallback}; ${d.prop}: ${compileValue(d.value)};`;
+    }).join(' ');
     return ` style="${compiled}"`;
   });
 }

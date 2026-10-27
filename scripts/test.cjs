@@ -14,13 +14,15 @@ const htmlNative = read('dist/index-native.html');
 const standalone = read('dist/standalone-compatible.html');
 const demoSource = read('src/demo.css');
 const htmlSource = read('src/index.html');
-const { compileValue, palette, accent } = createCompiler(read('src/colour.css'));
+const { compileValue, compileFallback, palette, accent } = createCompiler(read('src/colour.css'));
 
 // Palette, functions and accents.
 assert.equal((native.match(/style\(--value:\s*[\w-]+\):\s*#/g) || []).length, 21, '21 palette entries');
 assert.equal(palette.size, 21, 'compiler reads 21 palette entries');
 assert.equal(accent.size, 11, 'compiler reads 11 accent levels');
-assert.equal((native.match(/@function --colour(?:-[\w-]+)?\(/g) || []).length, 11, 'all 11 CSS functions');
+assert.equal((native.match(/@function --colour(?:-[\w-]+)?\(/g) || []).length, 12, 'all 12 CSS functions');
+assert.match(native, /@function --colour-contrast\(--background type\(<custom-ident> \| <color>\)\) returns <color> \{\s*result: contrast-color\(--colour\(var\(--background\)\)\);/,
+  '--colour-contrast() requires a background and delegates to --colour() and contrast-color()');
 assert.match(native, /@function --colour\(--value type\(<custom-ident> \| <color>\): currentColor\)/, '--colour() defaults to currentColor');
 const FUNCTIONS = {
   lighten: '10', darken: '15', saturate: '20', desaturate: '30', 'adjust-hue': '90',
@@ -94,6 +96,30 @@ assert.equal(compileValue('--colour-lighten(calc(5 * 2), blue)'), expected('ligh
 assert.equal(compileValue('1px solid #fff'), '1px solid #fff', 'non-library values are untouched');
 assert.equal(compileValue('attr(data-mark)'), 'attr(data-mark)');
 
+// --colour-contrast(): native contrast-color() output plus a static WCAG fallback when the background is known.
+assert.equal(compileValue('--colour-contrast(blue)'), `contrast-color(${palette.get('blue')})`);
+assert.equal(compileValue('--colour-contrast(var(--background))'), 'contrast-color(var(--background))');
+assert.equal(compileValue('--colour-contrast(--colour-darken(15, blue))'), `contrast-color(${expected('darken', '15', palette.get('blue'))})`);
+assert.equal(
+  compileValue('--colour-contrast(--colour-opacity(0.8, --colour-lighten(20, red)))'),
+  `contrast-color(${expected('opacity', '0.8', expected('lighten', '20', palette.get('red')))})`);
+const staticContrast = {
+  white: '#000', yellow: '#000', amber: '#000', lime: '#000', 'light-blue': '#000', cyan: '#000',
+  black: '#fff', indigo: '#fff', 'deep-purple': '#fff', purple: '#fff', brown: '#fff',
+};
+for (const [name, choice] of Object.entries(staticContrast)) assert.equal(compileFallback(`--colour-contrast(${name})`), choice, `fallback for ${name}`);
+assert.equal(compileFallback('--colour-contrast(#767676)'), '#000', 'WCAG crossover: #767676 favours black');
+assert.equal(compileFallback('--colour-contrast(#757575)'), '#fff', 'WCAG crossover: #757575 favours white');
+assert.equal(compileFallback('--colour-contrast(rgb(250, 250, 250))'), '#000', 'literal rgb()');
+assert.equal(compileFallback('--colour-contrast(hsl(240 100% 20%))'), '#fff', 'literal hsl()');
+assert.equal(compileFallback('--colour-contrast(--colour-lighten(40, --colour-darken(10, indigo)))'), '#000', 'nested static transformations');
+assert.equal(compileFallback('--colour-contrast(--colour-shade(70%, yellow))'), '#fff', 'shaded light colour');
+assert.equal(compileFallback('1px solid --colour-contrast(black)'), '1px solid #fff', 'contrast inside a shorthand');
+for (const dynamic of ['var(--background)', 'currentColor', 'oklch(85% 0.1 200)', '--colour-lighten(10)', '--colour-lighten(var(--x), blue)', 'color-mix(in srgb, red, blue)']) {
+  assert.equal(compileFallback(`--colour-contrast(${dynamic})`), null, `no static guess for ${dynamic}`);
+}
+assert.equal(compileFallback('--colour-lighten(10, blue)'), compileValue('--colour-lighten(10, blue)'), 'fallback is identical without contrast');
+
 // Malformed or unsupported calls fail loudly.
 const failures = [
   ['--colour-lighten(10, blue', /Unclosed/],
@@ -111,6 +137,9 @@ const failures = [
   ['--colour-mix(red)', /Unsupported custom function --colour-mix/],
   ['--brand-colour(red)', /Unsupported custom function/],
   ['--colour-opacity(0.5, --colour-lighten(blue, 10))', /expected a number/],
+  ['--colour-contrast()', /exactly 1 background colour/],
+  ['--colour-contrast(blue, red)', /exactly 1 background colour/],
+  ['--colour-contrast(red blue)', /not a single CSS colour value/],
 ];
 for (const [value, pattern] of failures) assert.throws(() => compileValue(value), pattern, value);
 
@@ -130,15 +159,36 @@ for (const name of palette.keys()) assert(demoSource.includes(`main:has(#tone-${
 
 // The expression shown in each composition card is exactly the one the card renders.
 const normalise = s => s.replace(/\s+/g, ' ').replace(/\(\s+/g, '(').replace(/\s+\)/g, ')').trim();
-const cards = [...htmlSource.matchAll(/data-example="([\w-]+)"[^]*?<pre class="code-box"><code>([^]*?)<\/code><\/pre>/g)];
+const cards = [...htmlSource.matchAll(/class="compose-card surface" data-example="([\w-]+)"[^]*?<pre class="code-box"><code>([^]*?)<\/code><\/pre>/g)];
 assert(cards.length >= 12, 'composition examples present');
 for (const [, example, code] of cards) {
   const rule = demoSource.match(new RegExp(`\\.compose-card\\[data-example="${example}"\\] \\.compose-swatch::before \\{ background: ([^;]+); \\}`));
   assert(rule, `CSS rule for composition example ${example}`);
   assert.equal(normalise(code), normalise(rule[1]), `displayed code matches CSS for ${example}`);
 }
+// Contrast: chips cover the whole palette, cards show their real expressions,
+// and the compat output keeps contrast-color() behind @supports with fallbacks.
+for (const name of palette.keys()) {
+  assert(htmlSource.includes(`data-colour="${name}"><strong>${name}</strong><code>--colour-contrast(${name})</code>`), `contrast chip ${name}`);
+  assert(demoSource.includes(`.contrast-chip[data-colour="${name}"] { background: --colour(${name}); --text-colour: --colour-contrast(${name}); }`), `contrast chip rule ${name}`);
+  const fallback = compileFallback(`--colour-contrast(${name})`);
+  assert(compatible.includes(`.contrast-chip[data-colour="${name}"] { background: ${palette.get(name)}; --text-colour: ${fallback}; }\n@supports (color: contrast-color(red)) {\n .contrast-chip[data-colour="${name}"] { --text-colour: contrast-color(${palette.get(name)}); } }`), `compat contrast chip ${name}`);
+}
+const contrastCards = [...htmlSource.matchAll(/data-example="([\w-]+)"><div class="contrast-sample">[^]*?<pre class="code-box"><code>background: ([^]*?);\ncolor: ([^]*?);<\/code><\/pre>/g)];
+assert.equal(contrastCards.length, 9, 'nine contrast examples');
+for (const [, example, background, color] of contrastCards) {
+  const rule = demoSource.match(new RegExp(`\\.contrast-card\\[data-example="${example}"\\] \\.contrast-sample \\{ background: ([^;]+);(?: --text-colour: #(?:000|fff);)? --text-colour: ([^;]+); \\}`));
+  assert(rule, `CSS rule for contrast example ${example}`);
+  assert.equal(normalise(background), normalise(rule[1]), `background shown for ${example}`);
+  assert.equal(normalise(color), normalise(rule[2]), `contrast shown for ${example}`);
+  assert(rule[2].startsWith('--colour-contrast('), `${example} uses --colour-contrast()`);
+}
+assert.equal((compatible.match(/@supports \(color: contrast-color\(red\)\)/g) || []).length, 30, 'every contrast rule is progressively enhanced');
+assert(compatible.includes('.contrast-card[data-example="custom-property"] .contrast-sample { background: var(--brand); --text-colour: #000; }'), 'runtime backgrounds keep the author fallback');
+assert(compatible.includes('--text-colour: contrast-color(var(--brand));'), 'runtime backgrounds use native contrast-color()');
+
 const operationCodes = [...htmlSource.matchAll(/data-fn="([\w-]+)"[^]*?<code class="code-box">([^<]+)<\/code>/g)];
 assert.equal(operationCodes.length, 9, 'nine operation cards');
 for (const [, fn, code] of operationCodes) assert(demoSource.includes(code), `operation card ${fn} shows its real CSS`);
 
-console.log(`Checks passed: ${palette.size} colours, 11 functions, ${accent.size} accents, ${cards.length} compositions, compiler edge cases and both demo modes.`);
+console.log(`Checks passed: ${palette.size} colours, 12 functions, ${accent.size} accents, ${cards.length} compositions, ${contrastCards.length + palette.size} contrast examples, compiler edge cases and both demo modes.`);
