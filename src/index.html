@@ -73,10 +73,53 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
           <figure class="tile" data-fn="tint"><i></i><figcaption><code>--colour-tint(50%, <span class="active-name"></span>)</code></figcaption></figure>
           <figure class="tile" data-fn="shade"><i></i><figcaption><code>--colour-shade(40%, <span class="active-name"></span>)</code></figcaption></figure>
         </div></div>
-        <div class="variation"><h3>Tone &amp; chroma <small>perceptual OKLCH</small></h3><div class="tiles">
-          <figure class="tile" data-fn="tone"><i></i><figcaption><code>--colour-tone(85%, <span class="active-name"></span>)</code></figcaption></figure>
-          <figure class="tile" data-fn="chroma"><i></i><figcaption><code>--colour-chroma(0.3, <span class="active-name"></span>)</code></figcaption></figure>
-        </div></div>
+      </div>
+    </div>
+    <div class="scales">
+      <div class="scale" data-fn="accent">
+        <h3>Accent <small>HSL scale, 500 is the base</small></h3>
+        <p><code>--colour-accent(level, <span class="active-name"></span>)</code></p>
+        <ol class="scale-steps">
+<li><i style="background: --colour-accent(50, var(--active));"></i>50</li>
+<li><i style="background: --colour-accent(100, var(--active));"></i>100</li>
+<li><i style="background: --colour-accent(200, var(--active));"></i>200</li>
+<li><i style="background: --colour-accent(300, var(--active));"></i>300</li>
+<li><i style="background: --colour-accent(400, var(--active));"></i>400</li>
+<li class="is-base"><i style="background: --colour-accent(500, var(--active));"></i>500</li>
+<li><i style="background: --colour-accent(600, var(--active));"></i>600</li>
+<li><i style="background: --colour-accent(700, var(--active));"></i>700</li>
+<li><i style="background: --colour-accent(800, var(--active));"></i>800</li>
+<li><i style="background: --colour-accent(900, var(--active));"></i>900</li>
+<li><i style="background: --colour-accent(1000, var(--active));"></i>1000</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="tone">
+        <h3>Tone <small>OKLCH lightness</small></h3>
+        <p><code>--colour-tone(lightness, <span class="active-name"></span>)</code></p>
+        <ol class="scale-steps">
+<li><i style="background: --colour-tone(10%, var(--active));"></i>10%</li>
+<li><i style="background: --colour-tone(20%, var(--active));"></i>20%</li>
+<li><i style="background: --colour-tone(30%, var(--active));"></i>30%</li>
+<li><i style="background: --colour-tone(40%, var(--active));"></i>40%</li>
+<li><i style="background: --colour-tone(50%, var(--active));"></i>50%</li>
+<li><i style="background: --colour-tone(60%, var(--active));"></i>60%</li>
+<li><i style="background: --colour-tone(70%, var(--active));"></i>70%</li>
+<li><i style="background: --colour-tone(80%, var(--active));"></i>80%</li>
+<li><i style="background: --colour-tone(90%, var(--active));"></i>90%</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="chroma">
+        <h3>Chroma <small>OKLCH colourfulness, 1 is unchanged</small></h3>
+        <p><code>--colour-chroma(multiplier, <span class="active-name"></span>)</code></p>
+        <ol class="scale-steps">
+<li><i style="background: --colour-chroma(0, var(--active));"></i>×0</li>
+<li><i style="background: --colour-chroma(0.25, var(--active));"></i>×0.25</li>
+<li><i style="background: --colour-chroma(0.5, var(--active));"></i>×0.5</li>
+<li><i style="background: --colour-chroma(0.75, var(--active));"></i>×0.75</li>
+<li class="is-base"><i style="background: --colour-chroma(1, var(--active));"></i>×1</li>
+<li><i style="background: --colour-chroma(1.25, var(--active));"></i>×1.25</li>
+<li><i style="background: --colour-chroma(1.5, var(--active));"></i>×1.5</li>
+        </ol>
       </div>
     </div>
     <div class="current">
