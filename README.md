@@ -8,64 +8,149 @@ In 2015, `colour` was an opinionated way to use named colours inside Sass. Now n
 
 ## From Sass to CSS
 
-The original `_colour.scss` is still available for existing projects. The new [`src/colour.css`](./src/colour.css) defines the entire 21-colour palette **once**, inside `--colour()`. The other functions delegate to that single source of truth. No generated global colour variables are needed.
+The original `_colour.scss` is still available, unchanged, for existing projects. The new [`src/colour.css`](./src/colour.css) defines the entire 21-colour palette **once**, inside `--colour()`. Every other function resolves its colour through `--colour()`, so there is a single source of truth and no global colour variables.
 
 ```css
 .button {
-  background: --colour(blue);
   color: --colour(white);
+  background: --colour(blue);
 }
 .button:hover {
-  background: --colour-darken(blue, 10);
+  background: --colour-darken(10, blue);
 }
 .alert {
-  background: --colour-tint(red, 85%);
-  border-color: --colour-accent(red, 700);
+  color: --colour(red);
+  background: --colour-tint(85%);
+  border-color: --colour-accent(700);
 }
 .overlay {
-  background: --colour-opacity(black, 0.5);
+  background: --colour-opacity(0.5, black);
 }
 ```
 
-### `currentColor`
+## The API
 
-Every function accepts `currentColor` as well as the 21 palette names. `--colour(currentColor)` resolves to the native `currentColor` keyword, and derived colours stay **dynamic**: they follow the element’s computed `color` property (including when it changes on `:hover` or via inheritance).
+Three rules:
+
+1. **Transformation first, colour last.** Every manipulation takes its adjustment as the first argument and an optional colour as the second.
+2. **`currentColor` by default.** Omit the colour and the function uses the element's computed `color`.
+3. **Any CSS colour.** The colour can be a palette name, a hex, `rgb()`, `hsl()`, `oklch()`, `color-mix()`, `currentColor`, a `var()`, or the result of another colour function.
+
+| Function | Signature | Notes |
+| --- | --- | --- |
+| `--colour` | `(colour = currentColor)` | Palette lookup; any other colour passes through |
+| `--colour-lighten` | `(amount, colour = currentColor)` | HSL lightness + amount points |
+| `--colour-darken` | `(amount, colour = currentColor)` | HSL lightness − amount points |
+| `--colour-saturate` | `(amount, colour = currentColor)` | HSL saturation + amount points |
+| `--colour-desaturate` | `(amount, colour = currentColor)` | HSL saturation − amount points |
+| `--colour-adjust-hue` | `(degrees, colour = currentColor)` | Hue rotation (a number, no `deg`) |
+| `--colour-tint` | `(percentage, colour = currentColor)` | sRGB mix with white |
+| `--colour-shade` | `(percentage, colour = currentColor)` | sRGB mix with black |
+| `--colour-rgba` | `(alpha, colour = currentColor)` | Sets alpha (0–1) |
+| `--colour-opacity` | `(alpha, colour = currentColor)` | Alias of `--colour-rgba` |
+| `--colour-accent` | `(level, colour = currentColor)` | Levels 50, 100…900, 1000 (500 = base) |
+
+Every function returns a CSS `<color>`, so its result can be used directly as another function's colour.
+
+### Palette names and other colours
+
+The 21 palette names are `red`, `pink`, `purple`, `deep-purple`, `indigo`, `blue`, `light-blue`, `cyan`, `teal`, `green`, `light-green`, `lime`, `yellow`, `amber`, `orange`, `deep-orange`, `brown`, `grey`, `blue-grey`, `black` and `white`. They **take precedence** over CSS named colours, so `--colour(red)` is `#f44336`, not `#ff0000`. Anything else passes through unchanged:
 
 ```css
-.link {
-  color: --colour(teal);
-}
-.link:hover {
-  color: --colour-darken(teal, 8);
-}
+background: --colour-darken(15, #6750a4);
+background: --colour-tint(25%, oklch(60% 0.2 250));
+background: --colour-saturate(10, rgb(255 87 34));
+background: --colour-lighten(10, rebeccapurple);
+```
+
+### Implicit `currentColor`
+
+```css
 .badge {
   color: --colour(purple);
-  background: --colour-tint(currentColor, 88%);
-  border: 1px solid --colour-shade(currentColor, 25%);
+  background: --colour-tint(88%);
+  border: 1px solid --colour-shade(25%);
 }
-.icon {
-  color: inherit;
-  fill: --colour-accent(currentColor, 600);
+.link:hover {
+  color: --colour-darken(10);
 }
 ```
 
-The Safari-compatible demo build preserves `currentColor` in generated CSS (it is not baked down to a static hex). Select **currentColor** in the playground and use the ink controls to change inherited text colour without JavaScript.
+Results stay **dynamic**. `currentColor` is resolved by the browser against the element's computed `color`, so derived colours update on `:hover`, through inheritance, or whenever `color` changes. Inside the `color` property itself, `currentColor` refers to the inherited colour. `--colour()` with no argument is simply `currentColor`.
 
-## Features
+### CSS custom properties
 
-- 21 Material-inspired named colours, defined in one native CSS function, plus `currentColor` for inherited colour.
-- 11 functions: colour lookup, lighten, darken, saturate, desaturate, adjust hue, tint, shade, RGBA, opacity, and accents.
-- 11 accent levels: 50–1000 (500 is the original base colour).
-- Fully interactive responsive demo: choosing a colour changes every swatch, transformation, accent and component with CSS `:has()` — **no browser JavaScript**.
-- Native `@function` version and a build-time compiled demo for iOS Safari, Firefox and other browsers without support for CSS custom functions.
+```css
+:root { --brand: --colour(teal); }
 
-## Browser support and compatibility
+.card {
+  background: --colour-lighten(10, var(--brand));
+  border-color: --colour-shade(20%, var(--brand, #6750a4));
+}
+```
 
-The library's **native CSS** is experimental: `@function` and `if(style(...))` are not universally available. For browsers without custom functions, the **default demo** is compiled at build time into CSS using relative HSL colours, `color-mix()` and `:has()`. Both demos use only CSS at runtime.
+### Functional composition
 
-The compatibility transform in [`scripts/build.cjs`](./scripts/build.cjs) is **specific to this demo and its existing function calls**. It is not a general-purpose polyfill that makes `--colour(blue)` usable in arbitrary Safari stylesheets. For general use, import [`src/colour.css`](./src/colour.css) in a browser with native custom-function support. The `dist/demo.compat.css` output can be used with the included demo HTML.
+Pass one function's result as another's colour. Nested calls are evaluated from the innermost outwards, and no intermediary variables are needed.
 
-The built demo targets modern browsers with relative colour syntax and `:has()` (including recent iOS Safari). These features also need browser support; this is not a legacy-browser polyfill.
+```css
+background: --colour-opacity(
+  0.8,
+  --colour-lighten(15, blue)
+);
+
+background: --colour-opacity(
+  0.8,
+  --colour-saturate(
+    20,
+    --colour-darken(10, blue)
+  )
+);
+
+/* Composition with implicit currentColor */
+background: --colour-opacity(
+  0.5,
+  --colour-lighten(20)
+);
+
+/* Arguments with their own commas are fine */
+background: --colour-tint(
+  10%,
+  color-mix(in srgb, --colour(red), --colour(amber) 40%)
+);
+```
+
+## Migrating from the previous argument order
+
+This is an intentional breaking change for the native CSS API; the original Sass API in `_colour.scss` is untouched. Swap the two arguments, and drop the colour wherever it should follow `currentColor`.
+
+| Before | After |
+| --- | --- |
+| `--colour-lighten(blue, 10)` | `--colour-lighten(10, blue)` |
+| `--colour-darken(var(--brand), 15)` | `--colour-darken(15, var(--brand))` |
+| `--colour-tint(red, 85%)` | `--colour-tint(85%, red)` |
+| `--colour-opacity(black, 0.5)` | `--colour-opacity(0.5, black)` |
+| `--colour-accent(red, 700)` | `--colour-accent(700, red)` |
+| `--colour-lighten(currentColor, 20)` | `--colour-lighten(20)` |
+| `--colour(currentColor)` | `--colour()` |
+
+## Native and Safari-compatible builds
+
+The library itself is **native CSS** ([`src/colour.css`](./src/colour.css)): custom `@function`, `if(style())` and relative colour syntax. It needs a browser with CSS custom functions: Chrome/Edge 139+. Playwright's WebKit 27.2 build also passes every native check, but shipping Safari releases may lag behind it.
+
+For browsers without custom functions, the **default demo** is compiled at build time by [`scripts/compiler.cjs`](./scripts/compiler.cjs) into plain CSS using relative colours, `color-mix()` and `:has()`. The compiler parses values into balanced function calls, compiles nested calls innermost-first at any depth, substitutes `currentColor` for omitted colours, resolves palette names from `src/colour.css`, and passes `currentColor`, `var()` (with fallbacks) and other colours through untouched. Malformed or unsupported calls fail the build instead of generating incorrect CSS.
+
+Scope and differences:
+
+- The compiler is a **build-time tool for this library and demo**, not a general-purpose `@function` polyfill. It only compiles the 11 `--colour*()` functions, and any other dashed function fails the build. The build currently applies it to `src/demo.css` and the demo's inline styles.
+- Palette names are resolved at build time, so they must appear literally. In the native build, `--colour(var(--x))` where `--x: blue` gives the palette blue; in the compiled build it gives CSS `blue`. Store resolved colours in custom properties instead (`--x: --colour(blue)`), as the demo does.
+- The compiled accent level must be a literal (`50`…`1000`). Amounts can be numbers, percentages, `calc()` or `var()`.
+- Both demos use only CSS at runtime. The compiled output targets browsers with relative colour syntax and `:has()` (including recent iOS Safari, Firefox and Chromium); it is not a legacy-browser polyfill.
+
+### Known engine limitations
+
+- **Chromium: a function nested inside itself is invalid.** For example, `--colour-lighten(10, --colour-lighten(10, red))` or `--colour(--colour(red))`. The spec allows this; Chromium treats it as recursion ([w3c/csswg-drafts#13943](https://github.com/w3c/csswg-drafts/issues/13943), accepted as a spec bugfix). An invalid argument falls back to the default, `currentColor`. Composing *different* functions works at any depth, and the library's functions never call one another (only `--colour()`), so this only affects literal self-nesting. WebKit and the compiled build both handle self-nesting. `npm run test:browser` reports when Chromium fixes it.
+- **Chromium: compiled `color: …currentColor…` doesn't update live.** In the compiled CSS, a `color` declaration derived from `currentColor` (for example `color: --colour-darken(10)`) is not recomputed when only the inherited colour changes later; a fresh render is correct. Other properties, the native build and WebKit all update correctly.
 
 ## Build and test
 
@@ -73,8 +158,12 @@ Requires Node.js 20+:
 
 ```sh
 npm install
-npm test
+npm test                                   # build + compiler/unit checks
+npx playwright install chromium webkit     # once
+npm run test:browser                       # native vs compiled, rendered in Chromium and WebKit
 ```
+
+`npm test` checks every function with omitted, explicit `currentColor`, palette and arbitrary colours, custom properties with fallbacks, deep and comma-heavy compositions, all 21 palette entries and 11 accents, and failure on malformed calls. `npm run test:browser` renders 177 expressions natively and compiled. It compares computed colours pixel-for-pixel in Chromium, then again after changing the inherited `color`, checks the compiled build in WebKit, and compares both full demos across palette and `currentColor` selections.
 
 The build writes the following files into `dist/`:
 
@@ -88,13 +177,13 @@ The build writes the following files into `dist/`:
 | `standalone-compatible.html` | Single-file version of the compatibility demo |
 | `standalone-native.html` | Single-file version of the native demo |
 
-The original `_colour.scss` remains unchanged, preserving the existing Sass API. To compare the rendered demos, switch between the native and compatibility links in the banner at the top of the demo.
+To compare the rendered demos, switch between the native and compatibility links in the banner at the top of the demo.
 
 ## GitHub Pages
 
-Pushing to `master` runs the workflow in [`.github/workflows/pages.yml`](./.github/workflows/pages.yml), tests and builds the demo, and uploads the `dist/` directory for deployment. For the first deployment, configure **Settings → Pages → Build and deployment → Source → GitHub Actions**.
+Pushing to `master` runs the workflow in [`.github/workflows/pages.yml`](./.github/workflows/pages.yml). It runs both test suites (including WebKit), builds the demo and deploys `dist/`. The first deployment requires **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 
-Intended public URL: **https://phunky.github.io/colour/** (after enabling and deploying Pages).
+Public URL: **https://phunky.github.io/colour/**
 
 ## Colour maths
 

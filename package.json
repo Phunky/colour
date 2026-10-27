@@ -1,13 +1,15 @@
 {
   "name": "colour-native-css",
   "private": true,
-  "version": "2.0.0",
-  "description": "A named colour library using native CSS custom functions, with a Safari-compatible demo",
+  "version": "3.0.0",
+  "description": "A composable named colour library using native CSS custom functions, with a Safari-compatible build",
   "scripts": {
     "build": "node scripts/build.cjs",
-    "test": "node scripts/build.cjs && node scripts/test.cjs"
+    "test": "node scripts/build.cjs && node scripts/test.cjs",
+    "test:browser": "node scripts/build.cjs && node scripts/browser-test.cjs"
   },
   "devDependencies": {
+    "playwright": "^1.64.1",
     "postcss": "^8.5.6"
   }
 }

@@ -1,85 +1,97 @@
 /*
- * colour-function-only.css
+ * colour.css
  * Experimental, pure CSS rewrite of https://github.com/Phunky/colour
+ *
+ * API: transformation first, colour last. The colour argument is optional,
+ * defaults to currentColor, and accepts a palette name or any CSS <color>
+ * (hex, rgb(), hsl(), oklch(), color-mix(), var(), or another --colour-*() result).
  *
  * The named palette has ONE source of truth: --colour().
  * No global colour custom properties are declared.
- * Helpers delegate to --colour() and return colours at computed-value time.
+ * Every helper resolves its colour through --colour(), so palette names take
+ * precedence over CSS named colours with the same name (e.g. red, blue).
+ *
+ * The colour parameter is typed <custom-ident> | <color> so palette names stay
+ * identifiers for matching, while every other colour passes through unchanged.
  *
  * Browser requirements: CSS custom @function, CSS if(style()), and
  * relative color syntax. Not supported in all browsers.
  * Lightness/saturation adjustments use HSL percentage points (0–100).
+ *
+ * Helpers never call each other (only --colour()): Chromium currently rejects
+ * a function nested in its own argument chain (csswg-drafts#13943), so
+ * delegation would break compositions such as --colour-rgba(1, --colour-opacity(.5)).
  */
 
 /* Original Material Design base palette. No :root variable duplication. */
-@function --colour(--name <custom-ident> | currentColor) returns <color> {
+@function --colour(--value type(<custom-ident> | <color>): currentColor) returns <color> {
   result: if(
-    style(--name: currentColor): currentColor;
-    style(--name: red): #f44336;
-    style(--name: pink): #e91e63;
-    style(--name: purple): #9c27b0;
-    style(--name: deep-purple): #673ab7;
-    style(--name: indigo): #3f51b5;
-    style(--name: blue): #2196f3;
-    style(--name: light-blue): #03a9f4;
-    style(--name: cyan): #00bcd4;
-    style(--name: teal): #009688;
-    style(--name: green): #4caf50;
-    style(--name: light-green): #8bc34a;
-    style(--name: lime): #cddc39;
-    style(--name: yellow): #ffeb3b;
-    style(--name: amber): #ffc107;
-    style(--name: orange): #ff9800;
-    style(--name: deep-orange): #ff5722;
-    style(--name: brown): #795548;
-    style(--name: grey): #9e9e9e;
-    style(--name: blue-grey): #607d8b;
-    style(--name: black): #000;
-    style(--name: white): #fff;
-    else: transparent
+    style(--value: red): #f44336;
+    style(--value: pink): #e91e63;
+    style(--value: purple): #9c27b0;
+    style(--value: deep-purple): #673ab7;
+    style(--value: indigo): #3f51b5;
+    style(--value: blue): #2196f3;
+    style(--value: light-blue): #03a9f4;
+    style(--value: cyan): #00bcd4;
+    style(--value: teal): #009688;
+    style(--value: green): #4caf50;
+    style(--value: light-green): #8bc34a;
+    style(--value: lime): #cddc39;
+    style(--value: yellow): #ffeb3b;
+    style(--value: amber): #ffc107;
+    style(--value: orange): #ff9800;
+    style(--value: deep-orange): #ff5722;
+    style(--value: brown): #795548;
+    style(--value: grey): #9e9e9e;
+    style(--value: blue-grey): #607d8b;
+    style(--value: black): #000;
+    style(--value: white): #fff;
+    else: var(--value)
   );
 }
 
-@function --colour-lighten(--name <custom-ident> | currentColor, --points <number>) returns <color> {
-  result: hsl(from --colour(var(--name)) h s clamp(0, calc(l + var(--points)), 100) / alpha);
+@function --colour-lighten(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h s clamp(0, calc(l + var(--points)), 100) / alpha);
 }
 
-@function --colour-darken(--name <custom-ident> | currentColor, --points <number>) returns <color> {
-  result: hsl(from --colour(var(--name)) h s clamp(0, calc(l - var(--points)), 100) / alpha);
+@function --colour-darken(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h s clamp(0, calc(l - var(--points)), 100) / alpha);
 }
 
-@function --colour-saturate(--name <custom-ident> | currentColor, --points <number>) returns <color> {
-  result: hsl(from --colour(var(--name)) h clamp(0, calc(s + var(--points)), 100) l / alpha);
+@function --colour-saturate(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h clamp(0, calc(s + var(--points)), 100) l / alpha);
 }
 
-@function --colour-desaturate(--name <custom-ident> | currentColor, --points <number>) returns <color> {
-  result: hsl(from --colour(var(--name)) h clamp(0, calc(s - var(--points)), 100) l / alpha);
+@function --colour-desaturate(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h clamp(0, calc(s - var(--points)), 100) l / alpha);
 }
 
-@function --colour-adjust-hue(--name <custom-ident> | currentColor, --degrees <number>) returns <color> {
-  result: hsl(from --colour(var(--name)) calc(h + var(--degrees)) s l / alpha);
+@function --colour-adjust-hue(--degrees <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) calc(h + var(--degrees)) s l / alpha);
 }
 
 /* tint/shade use sRGB interpolation rather than HSL lightness adjustment. */
-@function --colour-tint(--name <custom-ident> | currentColor, --weight <percentage>) returns <color> {
-  result: color-mix(in srgb, --colour(var(--name)), white var(--weight));
+@function --colour-tint(--weight <percentage>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: color-mix(in srgb, --colour(var(--value)), white var(--weight));
 }
 
-@function --colour-shade(--name <custom-ident> | currentColor, --weight <percentage>) returns <color> {
-  result: color-mix(in srgb, --colour(var(--name)), black var(--weight));
+@function --colour-shade(--weight <percentage>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: color-mix(in srgb, --colour(var(--value)), black var(--weight));
 }
 
-@function --colour-rgba(--name <custom-ident> | currentColor, --alpha <number>) returns <color> {
-  result: rgb(from --colour(var(--name)) r g b / var(--alpha));
+@function --colour-rgba(--alpha <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: rgb(from --colour(var(--value)) r g b / var(--alpha));
 }
 
-@function --colour-opacity(--name <custom-ident> | currentColor, --alpha <number>) returns <color> {
-  result: --colour-rgba(var(--name), var(--alpha));
+/* Alias of --colour-rgba(); see the header for why it does not delegate. */
+@function --colour-opacity(--alpha <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: rgb(from --colour(var(--value)) r g b / var(--alpha));
 }
 
 /* Original repo's HSL point shifts for Material-style accent weights.
    500 is the base colour, 1000 is its nonstandard extra-dark shade. */
-@function --colour-accent(--name <custom-ident> | currentColor, --level <integer>) returns <color> {
+@function --colour-accent(--level <integer>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
   --offset: if(
     style(--level: 50): 36;
     style(--level: 100): 34;
@@ -93,5 +105,5 @@
     style(--level: 900): -49;
     style(--level: 1000): -62
   );
-  result: hsl(from --colour(var(--name)) h s clamp(0, calc(l + var(--offset)), 100) / alpha);
+  result: hsl(from --colour(var(--value)) h s clamp(0, calc(l + var(--offset)), 100) / alpha);
 }
