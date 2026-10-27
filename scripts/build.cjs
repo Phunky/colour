@@ -8,15 +8,37 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const postcss = require('postcss');
-const { createCompiler } = require('./compiler.cjs');
+const { createCompiler, contrastReport } = require('./compiler.cjs');
 
 const root = path.resolve(__dirname, '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const write = (p, v) => fs.writeFileSync(path.join(root, p), v, 'utf8');
 const colourSource = read('src/colour.css');
 const demoSource = read('src/demo.css');
-const htmlSource = read('src/index.html');
-const { compileValue, compileFallback, usesContrast, palette, accent } = createCompiler(colourSource);
+const { compileValue, compileFallback, usesContrast, staticColour, palette, accent } = createCompiler(colourSource);
+
+/*
+ * Accessibility table: one row per palette colour (plus a translucent example),
+ * with the WCAG 2.x ratio of the background and the black/white text that
+ * contrast-color() picks. Nothing is hand-written; uncomputable rows say why.
+ */
+const A11Y_EXTRA = ['--colour-opacity(0.6, indigo)'];
+const truncate = ratio => (Math.floor(ratio * 100) / 100).toFixed(2);
+function accessibilityRows() {
+  return [...palette.keys(), ...A11Y_EXTRA].map(background => {
+    const expr = background.startsWith('--') ? background : `--colour(${background})`;
+    const report = contrastReport(staticColour(expr));
+    const swatch = `<span class="a11y-sample" style="background: ${expr}; color: --colour-contrast(${background});">${palette.has(background) ? background : 'translucent'}</span>`;
+    const name = palette.has(background) ? `<code>${background}</code> <code>${palette.get(background)}</code>` : `<code>${background}</code>`;
+    const verdict = pass => `<span class="${pass ? 'a11y-pass' : 'a11y-fail'}">${pass ? 'Pass' : 'Fail'}</span>`;
+    const cells = report.ratio === undefined
+      ? `<td>—</td><td colspan="3"><span class="a11y-unknown">Not computed (${report.reason})</span></td>`
+      : `<td><span class="a11y-ink" style="background: ${report.text};"></span>${report.text === '#fff' ? 'white' : 'black'} <code>${report.text}</code></td><td>${truncate(report.ratio)}:1</td><td>${verdict(report.aa)}</td><td>${verdict(report.aaa)}</td>`;
+    const data = report.ratio === undefined ? '' : ` data-text="${report.text}" data-ratio="${report.ratio}"`;
+    return `<tr data-background="${background}"${data}><td>${swatch}</td><td>${name}</td>${cells}</tr>`;
+  }).join('\n');
+}
+const htmlSource = replaceOnce(read('src/index.html'), '<!-- build:accessibility -->', () => accessibilityRows());
 const CONTRAST_SUPPORTS = '(color: contrast-color(red))';
 
 /*
@@ -63,7 +85,7 @@ function compileDeclarations(css, from) {
 
 const compatOutput = [
   '/* Generated from src/colour.css + src/demo.css by scripts/build.cjs. DO NOT EDIT. */',
-  '/* iOS Safari 18+, Firefox 133+, Chromium 131+; no CSS @function or if() at runtime. */',
+  '/* iOS Safari 18+, Firefox 133+, Chromium 131+; no CSS @function or if() at runtime. contrast-color() is used where supported. */',
   compileDeclarations(demoSource, 'src/demo.css'),
 ].join('\n');
 if (/@function\b|\bif\s*\(\s*style\(|--[\w-]+\(/.test(compatOutput.replace(/\/\*[^]*?\*\//g, ''))) {

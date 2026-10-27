@@ -13,12 +13,12 @@
 <div class="support-warning" role="note">This demo uses experimental CSS <code>@function</code> and <code>if()</code>. To see the live functions, open it in Chrome or Edge 139+; other browsers may show empty swatches.</div>
 <header class="site-header"><div class="topbar">
   <a class="brand" href="#top" aria-label="colour home"><span class="brandmark" aria-hidden="true"><i></i><i></i><i></i></span><span class="brand-name">colour<span> / native CSS</span></span></a>
-  <nav class="navlinks" aria-label="Main navigation"><a href="#playground">Playground</a><a href="#functions">Functions</a><a href="#accents">Accents</a><a href="#composition">Composition</a><a href="#contrast">Contrast</a><a class="github-link" href="https://github.com/Phunky/colour" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
+  <nav class="navlinks" aria-label="Main navigation"><a href="#playground">Playground</a><a href="#functions">Functions</a><a href="#oklch">OKLCH</a><a href="#composition">Composition</a><a href="#contrast">Contrast</a><a href="#themes">Themes</a><a href="#accessibility">Accessibility</a><a class="github-link" href="https://github.com/Phunky/colour" target="_blank" rel="noopener noreferrer">GitHub ↗</a></nav>
 </div></header>
 <main id="top">
   <div class="content">
     <section class="hero" aria-label="Introduction">
-      <div class="hero-copy"><span class="eyebrow">11 years later · no Sass required</span><h1>A palette.<br><span>No variables.</span><br>Just CSS.</h1><p>The complete colour toolkit, rebuilt around native CSS functions. One source of truth. Every shade computed by the browser. No Sass, no JavaScript.</p><div class="hero-tags"><span class="hero-tag"><span>●</span> 21 named colours</span><span class="hero-tag"><span>●</span> 12 CSS functions</span><span class="hero-tag"><span>●</span> Composable</span><span class="hero-tag"><span>●</span> Zero JS</span></div></div>
+      <div class="hero-copy"><span class="eyebrow">11 years later · no Sass required</span><h1>A palette.<br><span>No variables.</span><br>Just CSS.</h1><p>The complete colour toolkit, rebuilt around native CSS functions. One source of truth. Every shade computed by the browser. No Sass, no JavaScript.</p><div class="hero-tags"><span class="hero-tag"><span>●</span> 21 named colours</span><span class="hero-tag"><span>●</span> 16 CSS functions</span><span class="hero-tag"><span>●</span> Composable</span><span class="hero-tag"><span>●</span> Zero JS</span></div></div>
       <div class="hero-art" aria-hidden="true"><div class="art-grid"></div><div class="art-orb orb-pink"></div><div class="art-orb orb-blue"></div><div class="art-orb orb-amber"></div><div class="art-code">background: <b>--colour(blue)</b>;</div></div>
     </section>
     <section class="section" id="playground"><div class="section-heading"><div><span class="section-number">01 / Interactive palette</span><h2>Choose a colour. See everything change.</h2><p>The controls below are CSS radio inputs. The styling is powered entirely by native functions.</p></div><span class="eyebrow-pill">:has() + @function</span></div>
@@ -67,7 +67,59 @@
 <article class="operation-card surface" data-fn="opacity"><div class="operation-swatch" data-mark="α = 0.6"></div><div class="operation-body"><h3>Opacity</h3><p>RGBA convenience alias</p><code class="code-box">--colour-opacity(0.6, var(--active))</code></div></article>
       </div>
     </section>
-    <section class="section" id="accents"><div class="section-heading"><div><span class="section-number">03 / Material-style scale</span><h2>Eleven accents, one colour.</h2><p>The original Sass lightness offsets, from 50 through the extra-dark 1000.</p></div><span class="eyebrow-pill">--colour-accent()</span></div>
+    <section class="section" id="oklch"><div class="section-heading"><div><span class="section-number">03 / Perceptual colour</span><h2>Mix, tone and chroma in OKLCH.</h2><p>Perceptual adjustments follow how bright a colour looks, not its HSL numbers. Every strip uses the colour selected in the playground.</p></div><span class="eyebrow-pill">color-mix(in oklch) · oklch(from …)</span></div>
+      <div class="surface lab-panel"><div class="lab-head"><div><h3>Colour mixing</h3><p>The weight is the second colour's share: <code>0%</code> is all <code>var(--active)</code>, <code>100%</code> is all <code>var(--mix-with)</code>.</p></div><div class="ink-chips mix-chips" aria-label="Second colour">
+<label class="mix-option"><input id="mix-pink" type="radio" name="mix" value="pink" checked><i style="background: --colour(pink);" aria-hidden="true"></i>pink</label>
+<label class="mix-option"><input id="mix-amber" type="radio" name="mix" value="amber"><i style="background: --colour(amber);" aria-hidden="true"></i>amber</label>
+<label class="mix-option"><input id="mix-teal" type="radio" name="mix" value="teal"><i style="background: --colour(teal);" aria-hidden="true"></i>teal</label>
+<label class="mix-option"><input id="mix-deep-orange" type="radio" name="mix" value="deep-orange"><i style="background: --colour(deep-orange);" aria-hidden="true"></i>deep-orange</label>
+<label class="mix-option"><input id="mix-white" type="radio" name="mix" value="white"><i style="background: --colour(white);" aria-hidden="true"></i>white</label>
+<label class="mix-option"><input id="mix-black" type="radio" name="mix" value="black"><i style="background: --colour(black);" aria-hidden="true"></i>black</label>
+      </div></div>
+        <div class="strip" aria-label="Mix from 0% to 100%"><i class="mix-cell" data-weight="0"></i><i class="mix-cell" data-weight="10"></i><i class="mix-cell" data-weight="20"></i><i class="mix-cell" data-weight="30"></i><i class="mix-cell" data-weight="40"></i><i class="mix-cell" data-weight="50"></i><i class="mix-cell" data-weight="60"></i><i class="mix-cell" data-weight="70"></i><i class="mix-cell" data-weight="80"></i><i class="mix-cell" data-weight="90"></i><i class="mix-cell" data-weight="100"></i></div>
+        <div class="strip-scale"><span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span><span>100%</span></div>
+        <code class="code-box">--colour-mix(weight, var(--active), var(--mix-with))</code>
+      </div>
+      <div class="surface lab-panel"><div class="lab-head"><div><h3>Perceptual tone</h3><p><code>--colour-tone()</code> sets an <strong>absolute</strong> OKLCH lightness and keeps hue and chroma. <code>--colour-lighten()</code>/<code>--colour-darken()</code> shift HSL lightness by <strong>relative</strong> points.</p></div></div>
+        <p class="strip-title">OKLCH tone: <code>--colour-tone(L, var(--active))</code></p>
+        <div class="strip"><i class="tone-cell" data-tone="10"></i><i class="tone-cell" data-tone="20"></i><i class="tone-cell" data-tone="30"></i><i class="tone-cell" data-tone="40"></i><i class="tone-cell" data-tone="50"></i><i class="tone-cell" data-tone="60"></i><i class="tone-cell" data-tone="70"></i><i class="tone-cell" data-tone="80"></i><i class="tone-cell" data-tone="90"></i></div>
+        <div class="strip-scale"><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span><span>60%</span><span>70%</span><span>80%</span><span>90%</span></div>
+        <p class="strip-title">HSL steps: <code>--colour-darken(n, var(--active))</code> … <code>--colour-lighten(n, var(--active))</code></p>
+        <div class="strip"><i class="hsl-cell" data-step="-40"></i><i class="hsl-cell" data-step="-30"></i><i class="hsl-cell" data-step="-20"></i><i class="hsl-cell" data-step="-10"></i><i class="hsl-cell" data-step="0"></i><i class="hsl-cell" data-step="10"></i><i class="hsl-cell" data-step="20"></i><i class="hsl-cell" data-step="30"></i><i class="hsl-cell" data-step="40"></i></div>
+        <div class="strip-scale"><span>−40</span><span>−30</span><span>−20</span><span>−10</span><span>0</span><span>+10</span><span>+20</span><span>+30</span><span>+40</span></div>
+        <p class="strip-title">Same tone, different hues: <code>--colour(name)</code> above <code>--colour-tone(70%, name)</code></p>
+        <div class="hue-compare"><i data-hue="yellow"></i><i data-hue="lime"></i><i data-hue="cyan"></i><i data-hue="blue"></i><i data-hue="deep-purple"></i><i data-hue="red"></i><i class="is-toned" data-hue="yellow"></i><i class="is-toned" data-hue="lime"></i><i class="is-toned" data-hue="cyan"></i><i class="is-toned" data-hue="blue"></i><i class="is-toned" data-hue="deep-purple"></i><i class="is-toned" data-hue="red"></i></div>
+        <p class="lab-note">HSL lightness is relative and perceptually uneven: <code>--colour-lighten(20)</code> brightens yellow and blue by very different amounts, and HSL 50% looks far lighter for yellow than for blue. Equal OKLCH tones look equally light. Strong colours at extreme tones can fall outside the display gamut; the browser maps them, so the darkest and lightest cells may lose some saturation.</p>
+      </div>
+      <div class="surface lab-panel"><div class="lab-head"><div><h3>Chroma</h3><p><code>--colour-chroma(multiplier)</code> scales OKLCH chroma and keeps lightness, hue and alpha. 0 is monochrome, 1 the original.</p></div></div>
+        <div class="strip"><i class="chroma-cell" data-chroma="0"></i><i class="chroma-cell" data-chroma="0.25"></i><i class="chroma-cell" data-chroma="0.5"></i><i class="chroma-cell" data-chroma="0.75"></i><i class="chroma-cell" data-chroma="1"></i><i class="chroma-cell" data-chroma="1.25"></i><i class="chroma-cell" data-chroma="1.5"></i></div>
+        <div class="strip-scale"><span>0 · grey</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1 · original</span><span>1.25</span><span>1.5</span></div>
+        <code class="code-box">--colour-chroma(multiplier, var(--active))</code>
+      </div>
+    </section>
+    <section class="section" id="alpha"><div class="section-heading"><div><span class="section-number">04 / Alpha</span><h2>Set it, or multiply it.</h2><p><code>--colour-opacity()</code> replaces the alpha. <code>--colour-fade()</code> multiplies the alpha the colour already has.</p></div><span class="eyebrow-pill">opacity ≠ fade</span></div>
+      <div class="alpha-grid">
+<article class="alpha-card surface" data-example="opacity"><div class="alpha-swatch" data-alpha="0.5"></div><div class="operation-body"><h3>Opacity sets α = 0.5</h3><pre class="code-box"><code>--colour-opacity(0.5, var(--active))</code></pre></div></article>
+<article class="alpha-card surface" data-example="fade"><div class="alpha-swatch" data-alpha="0.5"></div><div class="operation-body"><h3>Fade of an opaque colour: 1 × 0.5 = 0.5</h3><pre class="code-box"><code>--colour-fade(0.5, var(--active))</code></pre></div></article>
+<article class="alpha-card surface" data-example="fade-nested"><div class="alpha-swatch" data-alpha="0.3"></div><div class="operation-body"><h3>Fade multiplies: 0.6 × 0.5 = 0.3</h3><pre class="code-box"><code>--colour-fade(
+  0.5,
+  --colour-opacity(0.6, var(--active))
+)</code></pre></div></article>
+<article class="alpha-card surface" data-example="opacity-nested"><div class="alpha-swatch" data-alpha="0.5"></div><div class="operation-body"><h3>Opacity replaces: 0.2 becomes 0.5</h3><pre class="code-box"><code>--colour-opacity(
+  0.5,
+  --colour-fade(0.2, var(--active))
+)</code></pre></div></article>
+<article class="alpha-card surface" data-example="fade-mix"><div class="alpha-swatch" data-alpha="0.25"></div><div class="operation-body"><h3>Fade of a mix with transparent: 0.5 × 0.5</h3><pre class="code-box"><code>--colour-fade(
+  0.5,
+  --colour-mix(50%, var(--active), transparent)
+)</code></pre></div></article>
+<article class="alpha-card surface" data-example="fade-clamp"><div class="alpha-swatch" data-alpha="1"></div><div class="operation-body"><h3>Clamped: 0.6 × 3 stops at 1</h3><pre class="code-box"><code>--colour-fade(
+  3,
+  --colour-opacity(0.6, var(--active))
+)</code></pre></div></article>
+      </div>
+    </section>
+    <section class="section" id="accents"><div class="section-heading"><div><span class="section-number">05 / Material-style scale</span><h2>Eleven accents, one colour.</h2><p>The original Sass lightness offsets, from 50 through the extra-dark 1000.</p></div><span class="eyebrow-pill">--colour-accent()</span></div>
       <div class="surface accent-frame"><div class="accent-frame-header"><strong>Accent scale</strong><span>50 → 1000 · 500 is the unmodified base</span></div><div class="accent-grid">
 <div class="accent-cell" data-level="50"><div class="accent-swatch" title="--colour-accent(50, var(--active))"></div><div class="accent-meta">50</div></div>
 <div class="accent-cell" data-level="100"><div class="accent-swatch" title="--colour-accent(100, var(--active))"></div><div class="accent-meta">100</div></div>
@@ -82,7 +134,7 @@
 <div class="accent-cell" data-level="1000"><div class="accent-swatch" title="--colour-accent(1000, var(--active))"></div><div class="accent-meta">1000</div></div>
       </div><div class="accent-explanation"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg><span>Accents use the repository's original HSL lightness adjustments, <strong>not</strong> Google's exact Material Design swatches. Example: <code>background: --colour-accent(700, blue);</code></span></div></div>
     </section>
-    <section class="section" id="composition"><div class="section-heading"><div><span class="section-number">04 / Functional composition</span><h2>Nest anything. No intermediary variables.</h2><p>Amount first, colour last. Omit the colour to use <code>currentColor</code>, or pass any CSS colour, including another function's result.</p></div><span class="eyebrow-pill">innermost → outermost</span></div>
+    <section class="section" id="composition"><div class="section-heading"><div><span class="section-number">06 / Functional composition</span><h2>Nest anything. No intermediary variables.</h2><p>Amount first, colour last. Omit the colour to use <code>currentColor</code>, or pass any CSS colour, including another function's result.</p></div><span class="eyebrow-pill">innermost → outermost</span></div>
       <div class="compose-toolbar"><span>Inherited <code>color</code> for the <code>currentColor</code> examples:</span><div class="ink-chips">
 <label for="ink-blue" style="color: --colour(blue);"><i aria-hidden="true"></i>blue</label>
 <label for="ink-red" style="color: --colour(red);"><i aria-hidden="true"></i>red</label>
@@ -141,9 +193,38 @@
     --colour-darken(12, var(--active))
   )
 )</code></pre></div></article>
+<article class="compose-card surface" data-example="mix-nested"><div class="compose-swatch" data-mark="mix of 2 transforms"></div><div class="operation-body"><h3>Mixing transformed colours</h3><p>Each colour argument can be another function's result.</p><pre class="code-box"><code>--colour-mix(
+  40%,
+  --colour-lighten(10, purple),
+  --colour-darken(10, blue)
+)</code></pre></div></article>
+<article class="compose-card surface" data-example="oklch-chain"><div class="compose-swatch" data-mark="mix → chroma → tone"></div><div class="operation-body"><h3>An OKLCH pipeline</h3><p>Mix two palette colours, reduce chroma, then set the tone.</p><pre class="code-box"><code>--colour-tone(
+  70%,
+  --colour-chroma(
+    0.8,
+    --colour-mix(40%, purple, blue)
+  )
+)</code></pre></div></article>
+<article class="compose-card surface" data-example="hsl-oklch"><div class="compose-swatch" data-mark="4 levels, HSL + OKLCH"></div><div class="operation-body"><h3>HSL on top of OKLCH</h3><p>Relative HSL darkening of a perceptual result.</p><pre class="code-box"><code>--colour-darken(
+  15,
+  --colour-tone(
+    70%,
+    --colour-chroma(
+      0.8,
+      --colour-mix(40%, purple, blue)
+    )
+  )
+)</code></pre></div></article>
+<article class="compose-card surface" data-example="dynamic-oklch"><div class="compose-swatch" data-mark="currentColor"></div><div class="operation-body"><h3>Dynamic OKLCH</h3><p>Tone and fade of the inherited colour, mixed with a palette colour.</p><pre class="code-box"><code>--colour-fade(
+  0.8,
+  --colour-tone(
+    55%,
+    --colour-mix(25%, currentColor, amber)
+  )
+)</code></pre></div></article>
       </div>
     </section>
-    <section class="section" id="contrast"><div class="section-heading"><div><span class="section-number">05 / Automatic text contrast</span><h2>Readable text on any background.</h2><p><code>--colour-contrast(background)</code> asks the browser's native <code>contrast-color()</code> for black or white, whichever contrasts more.</p></div><span class="eyebrow-pill">contrast-color()</span></div>
+    <section class="section" id="contrast"><div class="section-heading"><div><span class="section-number">07 / Automatic text contrast</span><h2>Readable text on any background.</h2><p><code>--colour-contrast(background)</code> asks the browser's native <code>contrast-color()</code> for black or white, whichever contrasts more.</p></div><span class="eyebrow-pill">contrast-color()</span></div>
       <div class="contrast-chips">
 <div class="contrast-chip contrast-sample" data-colour="red"><strong>red</strong><code>--colour-contrast(red)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
 <div class="contrast-chip contrast-sample" data-colour="pink"><strong>pink</strong><code>--colour-contrast(pink)</code><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></div>
@@ -212,19 +293,68 @@ color: --colour-contrast(
       </div>
       <p class="contrast-note">The result is always black or white, never a complementary colour. Alpha is ignored: for the translucent example, the choice is made as if the background were opaque, regardless of what shows through. Gradients and images are not considered either, so check real-world contrast visually. In the compatible build, browsers without <code>contrast-color()</code> use a black/white choice computed at build time with the WCAG 2.1 contrast ratio where the background is known (palette, hex, <code>rgb()</code>/<code>hsl()</code> and their transformations). Runtime backgrounds (<code>var()</code>, <code>oklch()</code>, <code>currentColor</code>) fall back to the declared default.</p>
     </section>
-    <section class="section" id="usage"><div class="section-heading"><div><span class="section-number">06 / Putting it together</span><h2>In real components.</h2><p>Copy a function into any CSS property that accepts a colour.</p></div></div><div class="usage-grid"><div class="usage-tile surface"><h3>A familiar API. Native implementation.</h3><p>The helpers delegate to a single palette function. Change the active swatch above and this whole component updates.</p><pre class="code-window"><code><span class="syntax-purple">.card</span> {
-  <span class="syntax-blue">color</span>: <span class="syntax-green">--colour</span>(blue);
-  <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-tint</span>(<span class="syntax-yellow">90%</span>);
-  <span class="syntax-blue">border-color</span>: <span class="syntax-green">--colour</span>();
-}
+    <section class="section" id="themes"><div class="section-heading"><div><span class="section-number">08 / Light and dark themes</span><h2>Native theming, no theme API.</h2><p><code>color-scheme</code> picks the branch of each <code>light-dark()</code>; the library derives every colour inside it.</p></div><span class="eyebrow-pill">color-scheme · light-dark()</span></div>
+      <div class="scheme-switch" role="radiogroup" aria-label="Colour scheme for the preview">
+<label class="scheme-option"><input id="scheme-system" type="radio" name="scheme" value="system" checked>System</label>
+<label class="scheme-option"><input id="scheme-light" type="radio" name="scheme" value="light">Light</label>
+<label class="scheme-option"><input id="scheme-dark" type="radio" name="scheme" value="dark">Dark</label>
+      </div>
+      <div class="theme-stage"><div class="theme-grid">
+<article class="theme-card contrast-sample" data-example="theme-card"><strong>Account overview</strong><p>Background, text and border all come from one <code>light-dark()</code> value.</p><span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span><span class="theme-actions"><span class="theme-button contrast-sample" data-example="theme-button">Continue <span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></span><span class="theme-badge contrast-sample" data-example="theme-badge">New <span class="contrast-label"><b class="is-black">black</b><b class="is-white">white</b> text</span></span></span></article>
+<pre class="code-window theme-code"><code>:root { color-scheme: light dark; }
 
-<span class="syntax-purple">.card:hover</span> {
-  <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-lighten</span>(<span class="syntax-yellow">12</span>, blue);
+.card {
+  --background: light-dark(
+    --colour(white),
+    --colour-tone(25%, blue-grey)
+  );
+  background: var(--background);
+  color: --colour-contrast(var(--background));
+  border-color: --colour-tone(
+    70%,
+    --colour-chroma(0.5, var(--background))
+  );
 }
-
-<span class="syntax-purple">.overlay</span> {
-  <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-opacity</span>(<span class="syntax-yellow">.5</span>, black);
-}</code></pre></div><div class="usage-tile surface"><h3>Every colour has an entire system.</h3><p>The demo itself uses function calls, not hard-coded swatches. Tint, base, and shade together produce the tonal grouping below.</p><div class="runtime-demo"><div><strong>A more expressive palette.</strong><p>From a single named value to a full colour system.</p></div><div class="runtime-spheres" aria-hidden="true"><i></i><i></i><i></i></div></div></div></div>
+.button {
+  --background: light-dark(
+    --colour-tone(45%, indigo),
+    --colour-tone(80%, --colour-chroma(0.5, indigo))
+  );
+  background: var(--background);
+  color: --colour-contrast(var(--background));
+}
+.badge {
+  background: light-dark(--colour(amber), --colour(indigo));
+  color: --colour-contrast(
+    light-dark(--colour(amber), --colour(indigo))
+  );
+}</code></pre>
+      </div></div>
+      <p class="contrast-note">The switch is three radio inputs: <code>:has()</code> sets <code>color-scheme</code> to <code>light</code>, <code>dark</code>, or <code>light dark</code> (follow the operating system) on the preview. Nothing else changes: every <code>light-dark()</code> and library function re-resolves for the new scheme.</p>
+    </section>
+    <section class="section" id="accessibility"><div class="section-heading"><div><span class="section-number">09 / Accessibility</span><h2>Measured contrast, not assumed.</h2><p>The WCAG 2.x contrast ratio of each palette colour and the text <code>--colour-contrast()</code> picks for it, computed at build time.</p></div><span class="eyebrow-pill">WCAG 2.x · AA 4.5:1 · AAA 7:1</span></div>
+      <div class="surface a11y-frame"><div class="a11y-scroll"><table class="a11y-table">
+<caption>Normal-size text on opaque palette backgrounds</caption>
+<thead><tr><th scope="col">Sample text</th><th scope="col">Background</th><th scope="col">Text</th><th scope="col">Ratio</th><th scope="col">AA (4.5:1)</th><th scope="col">AAA (7:1)</th></tr></thead>
+<tbody>
+<!-- build:accessibility -->
+</tbody></table></div>
+      <p class="a11y-note">Ratios are calculated by the build script (Node.js) with the WCAG 2.x relative-luminance formula, for these exact opaque colour pairs, and are shown truncated to two decimals; thresholds are compared without rounding. They don't account for transparency, gradients, images, text size and weight, or anything else rendered behind the text, and a passing ratio alone doesn't meet every accessibility requirement. Where a ratio can't be computed reliably (translucent or runtime backgrounds, colours outside the sRGB gamut, or near-ties between black and white), the table says so instead of estimating.</p></div>
+    </section>
+    <section class="section" id="usage"><div class="section-heading"><div><span class="section-number">10 / Putting it together</span><h2>A whole component from one colour.</h2><p>Copy a function into any CSS property that accepts a colour.</p></div></div><div class="usage-grid"><div class="usage-tile surface"><h3>Derive, don't declare.</h3><p>Background, text, hover and disabled states all come from a single base colour.</p><pre class="code-window"><code><span class="syntax-purple">button</span> {
+  <span class="syntax-blue">--background</span>: <span class="syntax-green">--colour-tone</span>(
+    <span class="syntax-yellow">65%</span>,
+    <span class="syntax-green">--colour-mix</span>(<span class="syntax-yellow">35%</span>, blue, purple)
+  );
+  <span class="syntax-blue">background</span>: var(--background);
+  <span class="syntax-blue">color</span>: <span class="syntax-green">--colour-contrast</span>(var(--background));
+  <span class="syntax-purple">&amp;:hover</span> {
+    <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-darken</span>(<span class="syntax-yellow">10</span>, var(--background));
+  }
+  <span class="syntax-purple">&amp;:disabled</span> {
+    <span class="syntax-blue">background</span>: <span class="syntax-green">--colour-fade</span>(<span class="syntax-yellow">0.4</span>, var(--background));
+  }
+}</code></pre><div class="derived-demo"><button class="derived-button" type="button">Hover me</button><button class="derived-button" type="button" disabled>Disabled</button></div></div><div class="usage-tile surface"><h3>Every colour has an entire system.</h3><p>The demo itself uses function calls, not hard-coded swatches. Tint, base, and shade together produce the tonal grouping below.</p><div class="runtime-demo"><div><strong>A more expressive palette.</strong><p>From a single named value to a full colour system.</p></div><div class="runtime-spheres" aria-hidden="true"><i></i><i></i><i></i></div></div></div></div>
     </section>
   </div>
 </main>
