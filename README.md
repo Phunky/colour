@@ -49,6 +49,7 @@ Three rules:
 | `--colour-rgba` | `(alpha, colour = currentColor)` | Sets alpha (0–1) |
 | `--colour-opacity` | `(alpha, colour = currentColor)` | Alias of `--colour-rgba` |
 | `--colour-accent` | `(level, colour = currentColor)` | Levels 50, 100…900, 1000 (500 = base) |
+| `--colour-contrast` | `(background)` | Black or white text for that background, via native `contrast-color()`. The background is **required** |
 
 Every function returns a CSS `<color>`, so its result can be used directly as another function's colour.
 
@@ -120,6 +121,40 @@ background: --colour-tint(
 );
 ```
 
+### Automatic text contrast
+
+`--colour-contrast(background)` resolves the background through `--colour()` and passes it to the browser's native [`contrast-color()`](https://drafts.csswg.org/css-color-5/#contrast-color). The result is whichever of **black or white** has the higher WCAG 2.1 contrast ratio against that background. Pair it with the same expression you use for the background:
+
+```css
+.button {
+  background: --colour(blue);
+  color: --colour-contrast(blue);
+}
+.brand {
+  background: #6750a4;
+  color: --colour-contrast(#6750a4);
+}
+.card {
+  background: var(--background);
+  color: --colour-contrast(var(--background));
+}
+.button:hover {
+  background: --colour-darken(15, blue);
+  color: --colour-contrast(--colour-darken(15, blue));
+}
+.overlay {
+  background: --colour-opacity(0.8, --colour-lighten(20, red));
+  color: --colour-contrast(--colour-opacity(0.8, --colour-lighten(20, red)));
+}
+```
+
+Things to know:
+
+- **Black or white only.** It chooses the more readable of the two. It doesn't pick complementary or brand colours, and it doesn't guarantee a particular ratio. Mid-tones such as `#767676` reach only about 4.5:1 either way, and `--colour(blue)` gets black (6.7:1) rather than white (3.1:1).
+- **The background is required.** Unlike the other functions it has no `currentColor` default: the text colour is the thing being chosen, so it can't also be the input. `--colour-contrast()` fails the compiled build. Natively it is invalid and the property falls back to its inherited or initial value.
+- **Alpha is ignored.** `contrast-color()` treats a translucent background as opaque, without considering what is behind it. `--colour-opacity(0.2, black)` gets white text (21:1 against opaque black), but composited over white the real ratio is about 1.6:1. Use it with opaque or nearly opaque backgrounds.
+- **It only sees the colour you pass in.** Gradients, images, `backdrop-filter`, shadows and overlapping elements are invisible to it. Pass the colour that actually sits behind the text, and still test real designs for accessibility, especially with transparency, gradients or images.
+
 ## Migrating from the previous argument order
 
 This is an intentional breaking change for the native CSS API; the original Sass API in `_colour.scss` is untouched. Swap the two arguments, and drop the colour wherever it should follow `currentColor`.
@@ -142,10 +177,38 @@ For browsers without custom functions, the **default demo** is compiled at build
 
 Scope and differences:
 
-- The compiler is a **build-time tool for this library and demo**, not a general-purpose `@function` polyfill. It only compiles the 11 `--colour*()` functions, and any other dashed function fails the build. The build currently applies it to `src/demo.css` and the demo's inline styles.
+- The compiler is a **build-time tool for this library and demo**, not a general-purpose `@function` polyfill. It only compiles the 12 `--colour*()` functions, and any other dashed function fails the build. The build currently applies it to `src/demo.css` and the demo's inline styles.
 - Palette names are resolved at build time, so they must appear literally. In the native build, `--colour(var(--x))` where `--x: blue` gives the palette blue; in the compiled build it gives CSS `blue`. Store resolved colours in custom properties instead (`--x: --colour(blue)`), as the demo does.
 - The compiled accent level must be a literal (`50`…`1000`). Amounts can be numbers, percentages, `calc()` or `var()`.
 - Both demos use only CSS at runtime. The compiled output targets browsers with relative colour syntax and `:has()` (including recent iOS Safari, Firefox and Chromium); it is not a legacy-browser polyfill.
+
+### `--colour-contrast()` in the compiled build
+
+The compiler keeps the browser's own `contrast-color()` and adds a fallback for browsers that lack it:
+
+```css
+/* source */
+.chip { background: --colour(yellow); color: --colour-contrast(yellow); }
+
+/* compiled */
+.chip { background: #ffeb3b; color: #000; }
+@supports (color: contrast-color(red)) {
+  .chip { color: contrast-color(#ffeb3b); }
+}
+```
+
+- **Static backgrounds get a build-time fallback.** These are palette names, hex, literal `rgb()`/`hsl()` and library transforms of them, such as `--colour-darken(15, blue)`. The compiler computes WCAG 2.1 relative luminance and picks black or white, ignoring alpha just as `contrast-color()` does. The browser tests check every one of these fallbacks against native `contrast-color()` in Chromium and WebKit.
+- **Runtime backgrounds get no guess.** The compiler doesn't pretend to evaluate `var()`, `currentColor`, `oklch()`, `color-mix()`, `calc()` amounts or anything else known only at runtime. It emits only the `@supports` rule, so declare your own fallback first:
+
+  ```css
+  .card {
+    color: #000; /* used where contrast-color() is unsupported */
+    color: --colour-contrast(var(--background));
+  }
+  ```
+
+- `@supports` blocks are only generated for declarations in ordinary style rules, and a compiled inline `style=""` attribute must have a static background. Both cases fail the build if not satisfied.
+- Without `contrast-color()`, the text colour no longer follows runtime changes to the background, for example a custom property changed on `:hover`.
 
 ### Known engine limitations
 
@@ -163,7 +226,9 @@ npx playwright install chromium webkit     # once
 npm run test:browser                       # native vs compiled, rendered in Chromium and WebKit
 ```
 
-`npm test` checks every function with omitted, explicit `currentColor`, palette and arbitrary colours, custom properties with fallbacks, deep and comma-heavy compositions, all 21 palette entries and 11 accents, and failure on malformed calls. `npm run test:browser` renders 177 expressions natively and compiled. It compares computed colours pixel-for-pixel in Chromium, then again after changing the inherited `color`, checks the compiled build in WebKit, and compares both full demos across palette and `currentColor` selections.
+`npm test` checks every function with omitted, explicit `currentColor`, palette and arbitrary colours, custom properties with fallbacks, deep and comma-heavy compositions, all 21 palette entries and 11 accents, and failure on malformed calls. It also checks the contrast compiler's static black/white decisions and its `@supports` output. `npm run test:browser` renders 177 expressions natively and compiled. It compares computed colours pixel-for-pixel in Chromium, then again after changing the inherited `color`, and checks the compiled build in WebKit.
+
+For contrast, it renders 40 backgrounds in both engines: all palette colours, light and dark hex values, `oklch()`, custom properties, nested and translucent transforms. It requires native, compiled and static-fallback text colours to agree, asserts the chosen colour has the higher WCAG ratio, and prints representative ratios. It then compares both full demos across palette and `currentColor` selections, checks every contrast label against the computed text colour, and reloads the compiled demo with `contrast-color()` disabled to check the fallbacks.
 
 The build writes the following files into `dist/`:
 
