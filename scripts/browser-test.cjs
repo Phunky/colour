@@ -12,11 +12,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const { chromium, webkit } = require('playwright');
-const { createCompiler } = require('./compiler.cjs');
+const { createCompiler, luminance, contrastRatio } = require('./compiler.cjs');
 
 const root = path.resolve(__dirname, '..');
 const colourSource = fs.readFileSync(path.join(root, 'src/colour.css'), 'utf8');
-const { compileValue, palette, accent } = createCompiler(colourSource);
+const { compileValue, compileFallback, palette, accent } = createCompiler(colourSource);
 const TOLERANCE = 2;
 
 const AMOUNTS = {
@@ -163,6 +163,72 @@ async function testFixtures(chrome, safari) {
   await reportSelfNesting(safari, 'WebKit');
 }
 
+const contrastBackgrounds = [
+  ...palette.keys(),
+  '#767676', '#757575', '#6750a4', '#fafafa', '#101010', 'rgb(250, 250, 250)', 'hsl(240 100% 20%)',
+  'oklch(85% 0.1 200)', 'oklch(30% 0.1 30)', 'var(--brand)', 'var(--missing, #ffeb3b)',
+  '--colour-darken(15, blue)', '--colour-lighten(30, --colour-darken(10, indigo))', '--colour-tint(85%, deep-purple)',
+  '--colour-shade(70%, yellow)', '--colour-accent(900, amber)', '--colour-accent(50, indigo)',
+  '--colour-opacity(0.8, --colour-lighten(20, red))', '--colour-opacity(0.2, black)',
+];
+const REPRESENTATIVE = ['yellow', 'blue', 'indigo', 'grey', '#767676', '--colour-darken(15, blue)', '--colour-opacity(0.2, black)'];
+
+async function renderContrast(browser, mode) {
+  const value = bg => {
+    const expr = `--colour-contrast(${bg})`;
+    if (mode === 'native') return expr;
+    if (mode === 'fallback') return compileFallback(expr) ?? 'transparent';
+    return compileValue(expr);
+  };
+  const rules = contrastBackgrounds.map((bg, i) => {
+    const background = mode === 'native' ? (bg.startsWith('--') ? bg : `--colour(${bg})`) : compileValue(bg.startsWith('--') ? bg : `--colour(${bg})`);
+    return `#k${i} { background-color: ${background}; color: ${value(bg)}; }`;
+  }).join('\n');
+  const page = await browser.newPage();
+  await page.setContent(`<!doctype html><style>${mode === 'native' ? colourSource : ''} body { color: rgb(200, 0, 200); --brand: #00897b; }\n${rules}</style>`
+    + contrastBackgrounds.map((_, i) => `<div id="k${i}">Aa</div>`).join(''));
+  const selectors = contrastBackgrounds.flatMap((_, i) => [[`#k${i}`, 'background-color'], [`#k${i}`, 'color']]);
+  const values = await readColours(page, selectors);
+  await page.close();
+  return contrastBackgrounds.map((bg, i) => ({ bg, background: values[2 * i], text: values[2 * i + 1] }));
+}
+
+const srgb = c => ({ r: c.rgba[0] / 255, g: c.rgba[1] / 255, b: c.rgba[2] / 255 });
+const isBlackOrWhite = c => c.rgba[3] === 255 && c.rgba.slice(0, 3).every(v => v === c.rgba[0]) && (c.rgba[0] === 0 || c.rgba[0] === 255);
+
+async function testContrast(chrome, safari) {
+  const start = failures.length;
+  for (const [engine, browser] of [['Chromium', chrome], ['WebKit', safari]].filter(([, b]) => b)) {
+    const [native, compat, fallback] = await Promise.all(['native', 'compat', 'fallback'].map(m => renderContrast(browser, m)));
+    native.forEach((n, i) => {
+      check(isBlackOrWhite(n.text), `${engine}: --colour-contrast(${n.bg}) should be black or white, got ${fmt(n.text)}`);
+      check(close(n.text, compat[i].text), `${engine}: native vs compat --colour-contrast(${n.bg})\n    ${fmt(n.text)}\n    ${fmt(compat[i].text)}`);
+      check(close(n.background, compat[i].background), `${engine}: background ${n.bg}`);
+      const staticFallback = compileFallback(`--colour-contrast(${n.bg})`);
+      if (staticFallback !== null) {
+        check(close(n.text, fallback[i].text), `${engine}: build-time WCAG fallback disagrees with contrast-color() for ${n.bg}: ${staticFallback} vs ${fmt(n.text)}`);
+      }
+      const bgL = luminance(srgb(n.background));
+      const chosen = contrastRatio(bgL, luminance(srgb(n.text)));
+      const other = contrastRatio(bgL, n.text.rgba[0] === 0 ? 1 : 0);
+      check(chosen >= other - 0.01, `${engine}: ${n.bg} chose the lower-contrast option (${chosen.toFixed(2)}:1 vs ${other.toFixed(2)}:1)`);
+    });
+    if (engine === 'Chromium') {
+      const statics = native.filter(n => compileFallback(`--colour-contrast(${n.bg})`) !== null).length;
+      console.log(`Chromium contrast: ${native.length} backgrounds, native vs compat ${failuresSince(start)}; ${statics} build-time fallbacks match contrast-color().`);
+      console.log('Representative WCAG 2.1 ratios (alpha ignored, as contrast-color() does):');
+      for (const n of native.filter(n => REPRESENTATIVE.includes(n.bg))) {
+        const bgL = luminance(srgb(n.background));
+        const name = n.text.rgba[0] === 0 ? 'black' : 'white';
+        const over = n.background.rgba[3] < 255 ? ` — ${contrastRatio(luminance(srgb({ rgba: n.background.rgba.map((v, k) => k < 3 ? v * n.background.rgba[3] / 255 + 255 * (1 - n.background.rgba[3] / 255) : v) })), luminance(srgb(n.text))).toFixed(2)}:1 when composited over white` : '';
+        console.log(`  ${n.bg.padEnd(30)} ${name} ${contrastRatio(bgL, luminance(srgb(n.text))).toFixed(2)}:1 (other: ${contrastRatio(bgL, name === 'black' ? 1 : 0).toFixed(2)}:1)${over}`);
+      }
+    } else {
+      console.log(`WebKit contrast: ${native.length} backgrounds, native, compat and fallbacks ${failuresSince(start)}.`);
+    }
+  }
+}
+
 const TONES = ['red', 'blue', 'teal', 'amber', 'black', 'white', 'deep-purple', 'currentColor'];
 const INKS = ['blue', 'red', 'amber'];
 async function sampleDemo(page) {
@@ -174,15 +240,28 @@ async function sampleDemo(page) {
       .forEach(el => out.push([tag(el, n++), 'background-color']));
     document.querySelectorAll('[data-fn="rgba"] .operation-swatch, [data-fn="opacity"] .operation-swatch, .compose-swatch')
       .forEach(el => out.push([tag(el, n++), 'background-color', '::before']));
-    document.querySelectorAll('.example-alert, .ink-option').forEach(el => out.push([tag(el, n++), 'color']));
+    document.querySelectorAll('.example-alert, .ink-option, .contrast-sample').forEach(el => out.push([tag(el, n++), 'color']));
+    document.querySelectorAll('.contrast-sample').forEach(el => out.push([tag(el, n++), 'background-color']));
     return out;
   });
   return readColours(page, selectors).then(values => values.map((v, i) => ({ v, at: selectors[i] })));
 }
 
+// Every contrast label must name the colour the text actually uses.
+async function checkContrastLabels(page, label) {
+  const mismatches = await page.evaluate(() => [...document.querySelectorAll('.contrast-sample')].map(el => {
+    const text = el.querySelector('.contrast-label').innerText.replace(/\s+/g, ' ').trim().toLowerCase();
+    const colour = getComputedStyle(el).color;
+    const expected = colour === 'rgb(0, 0, 0)' ? 'black text' : colour === 'rgb(255, 255, 255)' ? 'white text' : `unexpected ${colour}`;
+    return text === expected ? null : `${el.dataset.colour || el.parentElement.dataset.example}: label "${text}", colour ${colour}`;
+  }).filter(Boolean));
+  mismatches.forEach(m => check(false, `${label} contrast label: ${m}`));
+}
+
 async function renderDemo(browser, file) {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   await page.goto(pathToFileURL(path.join(root, 'dist', file)).href);
+  await checkContrastLabels(page, `${browser.browserType().name()} ${file}`);
   const states = [];
   for (const tone of TONES) {
     await page.click(`label:has(#tone-${tone})`);
@@ -212,6 +291,35 @@ async function testDemos(chrome, safari) {
   check(transparent.length === 0, `Demo swatches rendered transparent: ${transparent.join(', ')}`);
   console.log(`Chromium demo: ${native.length} palette/ink states × ${native[0].samples.length} swatches, native vs compat ${failuresSince(start)}.`);
 
+  // Simulate an older browser: the compat CSS without its @supports (contrast-color()) blocks.
+  start = failures.length;
+  const runtimeExamples = ['oklch', 'custom-property', 'dynamic'];
+  const contrastColours = async (file, legacy = false) => {
+    const page = await chrome.newPage({ viewport: { width: 1280, height: 900 } });
+    await page.route('http://demo.test/**', route => {
+      const name = new URL(route.request().url()).pathname.slice(1);
+      const filePath = path.join(root, 'dist', name);
+      if (!fs.existsSync(filePath)) return route.fulfill({ status: 404 });
+      let body = fs.readFileSync(filePath, 'utf8');
+      if (legacy && name.endsWith('.css')) body = body.replaceAll('@supports (color: contrast-color(red))', '@supports (color: no-such-function(red))');
+      return route.fulfill({ contentType: name.endsWith('.css') ? 'text/css' : 'text/html', body });
+    });
+    await page.goto(`http://demo.test/${file}`);
+    await checkContrastLabels(page, `Chromium ${file}${legacy ? ' without contrast-color()' : ''}`);
+    const colours = new Map(await page.$$eval('.contrast-sample', els => els.map(el => [el.dataset.colour || el.parentElement.dataset.example, getComputedStyle(el).color])));
+    await page.close();
+    return colours;
+  };
+  const nativeColours = await contrastColours('index-native.html');
+  const legacyColours = await contrastColours('index.html', true);
+  check(legacyColours.size === 30, `expected 30 contrast samples, found ${legacyColours.size}`);
+  for (const [name, colour] of legacyColours) {
+    if (runtimeExamples.includes(name)) check(colour === 'rgb(0, 0, 0)', `Without contrast-color(), ${name} should use its declared fallback, got ${colour}`);
+    else check(colour === nativeColours.get(name), `Without contrast-color(), static fallback for ${name} is ${colour} but contrast-color() chooses ${nativeColours.get(name)}`);
+  }
+  const legacyChecks = [...legacyColours.keys()];
+  console.log(`Chromium demo without contrast-color(): ${legacyChecks.length - runtimeExamples.length} static fallbacks match native and ${runtimeExamples.length} runtime examples use their declared fallback — ${failuresSince(start)}.`);
+
   if (!safari) return;
   start = failures.length;
   const webkitCompat = await renderDemo(safari, 'index.html');
@@ -230,6 +338,7 @@ async function testDemos(chrome, safari) {
   }
   try {
     await testFixtures(chrome, safari);
+    await testContrast(chrome, safari);
     await testDemos(chrome, safari);
   } finally {
     await chrome.close();
