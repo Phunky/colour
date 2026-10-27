@@ -111,18 +111,16 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
 }
 
 .button {
-  --background: --colour-tone(
+  --base: --colour-tone(
     65%,
     --colour-mix(35%, blue, purple)
   );
+  --background: var(--base);
   background: var(--background);
   color: --colour-contrast(var(--background));
   border-color: --colour-darken(15, var(--background));
-  &amp;:hover {
-    background: --colour-darken(
-      10,
-      var(--background)
-    );
+  &amp;:hover, &amp;:focus-visible {
+    --background: --colour-darken(10, var(--base));
   }
 }</code></pre>
     </div>

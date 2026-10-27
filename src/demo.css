@@ -105,7 +105,10 @@ main:has(#scheme-dark:checked) .stage { color-scheme: dark; }
 .card p { font-size: 14px; opacity: .8; }
 .card { --surface: light-dark(--colour(white), --colour-tone(25%, blue-grey)); background: var(--surface); color: light-dark(#000, #fff); color: --colour-contrast(var(--surface)); }
 .button { font: inherit; font-weight: 700; font-size: 14px; padding: 10px 18px; margin-top: 8px; border: 2px solid; border-radius: 10px; cursor: pointer; }
-.button { --background: --colour-tone(65%, --colour-mix(35%, blue, purple)); background: var(--background); color: #000; color: --colour-contrast(var(--background)); border-color: --colour-darken(15, var(--background)); &:hover { background: --colour-darken(10, var(--background)); } }
+/* Change the effective surface, not just background: contrast text follows it. */
+.button { --base: --colour-tone(65%, --colour-mix(35%, blue, purple)); --background: var(--base); background: var(--background); color: #000; color: --colour-contrast(var(--background)); border-color: --colour-darken(15, var(--background)); &:hover, &:focus-visible { --background: --colour-darken(10, var(--base)); } }
+/* The compiled demo needs an explicit hover foreground on older browsers. */
+@supports not (color: contrast-color(red)) { .button:is(:hover, :focus-visible) { color: #fff; } }
 /* Get started */
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 28px; }
 .steps p { margin: 6px 0 12px; color: #4b5a69; font-size: 14px; }

@@ -125,6 +125,7 @@ function serialise(nodes) {
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 function parseHex(hex) {
+  if (!/^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(hex)) return null;
   let h = hex.slice(1);
   if (h.length <= 4) h = [...h].map(c => c + c).join('');
   const n = i => parseInt(h.slice(i, i + 2), 16) / 255;
@@ -259,6 +260,7 @@ function createCompiler(colourSource) {
     }
     if (only.type === 'function') return compileNode(only, mode);
     const ident = only.value.trim();
+    if (ident.startsWith('#') && !parseHex(ident)) throw Error(`${call}: invalid hex colour "${ident}"`);
     const css = palette.get(ident) || ident;
     return { css, rgb: staticText(css) };
   }

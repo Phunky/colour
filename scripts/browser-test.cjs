@@ -387,7 +387,7 @@ async function sampleComposition(page) {
   }
   await page.click('label:has(#scheme-light)');
   await page.hover('.button');
-  values.hover = (await readColours(page, [['.button', 'background-color']]))[0];
+  values.hover = await readColours(page, [['.button', 'background-color'], ['.button', 'color']]);
   await page.mouse.move(0, 0);
   return values;
 }
@@ -422,23 +422,26 @@ async function testDemos(chrome, safari) {
       if (state === 'hover') continue;
       STATIC_PROBES.forEach((probe, i) => check(close(values[i], reference.composition[state][i]), `${label} composition ${state} ${probe.join(' ')}: ${fmt(values[i])} vs native ${fmt(reference.composition[state][i])}`));
     }
-    check(close(result.composition.hover, reference.composition.hover), `${label} button hover: ${fmt(result.composition.hover)} vs native ${fmt(reference.composition.hover)}`);
+    for (let i = 0; i < 2; i++) {
+      check(close(result.composition.hover[i], reference.composition.hover[i]), `${label} button hover ${i === 0 ? 'background' : 'text'}: ${fmt(result.composition.hover[i])} vs native ${fmt(reference.composition.hover[i])}`);
+    }
   }
   console.log(`Playground: ${palette.size} palette states × ${PLAYGROUND_PROBES.length} colours match their displayed expressions, names and black/white labels in ${runs.length} runs (${runs.map(r => r[0]).join(', ')}) — ${failuresSince(start)}.`);
 
   // The composition renders exactly the expressions it shows.
   start = failures.length;
   const button = '--colour-tone(65%, --colour-mix(35%, blue, purple))';
+  const hoverExpression = `--colour-darken(10, ${button})`;
   const want = (await renderCases(chrome, 'native', [
-    button, `--colour-contrast(${button})`, `--colour-darken(15, ${button})`, `--colour-darken(10, ${button})`,
+    button, `--colour-contrast(${button})`, `--colour-darken(15, ${button})`, hoverExpression, `--colour-contrast(${hoverExpression})`,
     '--colour(white)', '--colour-contrast(white)', '--colour-tone(25%, blue-grey)', '--colour-contrast(--colour-tone(25%, blue-grey))',
     '--colour-tint(85%, red)', '--colour(red)', '--colour-shade(45%, red)',
   ].map(expr => ({ expr, property: 'background-color' })))).fresh[0];
-  const [bg, text, border, hover, light, lightText, dark, darkText, alertBg, alertBorder, alertText] = want;
+  const [bg, text, border, hover, hoverText, light, lightText, dark, darkText, alertBg, alertBorder, alertText] = want;
   const c = reference.composition;
   const at = (state, selector, property) => c[state][STATIC_PROBES.findIndex(p => p[0] === selector && p[1] === property)];
   check(close(at('light/dark', '.button', 'background-color'), bg) && close(at('light/dark', '.button', 'color'), text) && close(at('light/dark', '.button', 'border-top-color'), border), 'button background, text and border derive from --background');
-  check(close(c.hover, hover) && !close(c.hover, bg), `button hover is --colour-darken(10, var(--background)): ${fmt(c.hover)} vs ${fmt(hover)}`);
+  check(close(c.hover[0], hover) && close(c.hover[1], hoverText) && !close(c.hover[0], bg), `button hover background and contrasting text derive from --background: ${fmt(c.hover[0])}, ${fmt(c.hover[1])}`);
   check(close(at('light/dark', '.alert', 'background-color'), alertBg) && close(at('light/dark', '.alert', 'border-top-color'), alertBorder) && close(at('light/dark', '.alert', 'color'), alertText), 'hero alert renders its code');
   for (const [state, surface, ink] of [['light/dark', light, lightText], ['auto/light', light, lightText], ['dark/light', dark, darkText], ['auto/dark', dark, darkText]]) {
     check(close(at(state, '.card', 'background-color'), surface) && close(at(state, '.card', 'color'), ink), `card in ${state} (scheme/OS): ${fmt(at(state, '.card', 'background-color'))} on ${fmt(at(state, '.card', 'color'))}`);

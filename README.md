@@ -14,14 +14,15 @@ The original `_colour.scss` is still available, unchanged, for existing projects
 
 ```css
 button {
-  --background: --colour-tone(
+  --base: --colour-tone(
     65%,
     --colour-mix(35%, blue, purple)
   );
+  --background: var(--base);
   background: var(--background);
   color: --colour-contrast(var(--background));
-  &:hover {
-    background: --colour-darken(10, var(--background));
+  &:hover, &:focus-visible {
+    --background: --colour-darken(10, var(--base));
   }
   &:disabled {
     background: --colour-fade(0.4, var(--background));

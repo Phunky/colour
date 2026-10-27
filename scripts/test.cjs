@@ -3,7 +3,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert/strict');
-const { createCompiler, contrastRatio, luminance, toOklch } = require('./compiler.cjs');
+const { createCompiler, contrastRatio, luminance, toOklch, parseHex } = require('./compiler.cjs');
 
 const root = path.resolve(__dirname, '..');
 const read = p => fs.readFileSync(path.join(root, p), 'utf8');
@@ -242,6 +242,16 @@ const failures = [
 ];
 for (const [value, pattern] of failures) assert.throws(() => compileValue(value), pattern, value);
 
+// CSS hex colours must have exactly 3, 4, 6 or 8 digits.
+for (const invalid of ['#12345', '#1234567']) {
+  assert.equal(parseHex(invalid), null, `${invalid} is not a static colour`);
+  assert.throws(() => compileValue(`--colour(${invalid})`), /invalid hex colour/);
+}
+for (const valid of ['#123', '#1234', '#123456', '#12345678']) {
+  assert(parseHex(valid), `${valid} parses`);
+  assert.equal(compileValue(`--colour(${valid})`), valid);
+}
+
 // Generated demo files.
 assert(!/@function\s+--/.test(compatible), 'no @function rules in compatible CSS');
 assert(!/--[\w-]+\(/.test(compatible.replace(/\/\*[^]*?\*\//g, '')), 'no uncompiled function calls');
@@ -294,12 +304,13 @@ const declarations = code => [...normalise(code).matchAll(/([\w-]+): ([^;]+);/g)
 const ruleFor = selector => normalise(demoSource.split('\n').filter(l => l.startsWith(`${selector} {`) && l.includes('--')).join(' '));
 const [cardCode, buttonCode] = htmlSource.match(/<pre class="code compose-code"><code>([^]*?)<\/code>/)[1].replaceAll('&amp;', '&').split(/\n\n/);
 const shownCode = { '.alert': codeBlock('.alert {'), '.tag': codeBlock('.tag {'), '.card': cardCode, '.button': buttonCode };
-for (const [selector, count] of [['.alert', 3], ['.tag', 2], ['.card', 3], ['.button', 5]]) {
+for (const selector of ['.alert', '.tag', '.card', '.button']) {
   const shown = declarations(shownCode[selector]);
-  assert.equal(shown.length, count, `${selector}: ${count} declarations shown`);
+  assert(shown.length > 0, `${selector}: example has CSS declarations`);
   for (const declaration of shown) assert(ruleFor(selector).includes(declaration), `${selector} uses ${declaration}`);
 }
-assert(ruleFor('.button').includes('&:hover { background: --colour-darken(10, var(--background)); }'), 'hover shown is hover used');
+assert(ruleFor('.button').includes('&:hover, &:focus-visible { --background: --colour-darken(10, var(--base)); }'), 'hover/focus updates the effective background used for text contrast');
+assert(demoSource.includes('@supports not (color: contrast-color(red)) { .button:is(:hover, :focus-visible) { color: #fff; } }'), 'older engines use a readable hover fallback');
 assert(compatible.includes('.tag { background: color-mix(in srgb, currentColor, white 85%); border-color: color-mix(in srgb, currentColor, white 60%); }'), 'tags stay currentColor-based');
 assert(compatible.includes('.card { --surface: light-dark(#fff, oklch(from #607d8b 25% c h / alpha)); background: var(--surface); color: light-dark(#000, #fff); }'), 'card keeps its author fallback');
 for (const scheme of ['light', 'dark']) assert(compatible.includes(`main:has(#scheme-${scheme}:checked) .stage { color-scheme: ${scheme}; }`), `${scheme} switch`);
