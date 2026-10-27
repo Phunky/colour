@@ -436,4 +436,4 @@ function createCompiler(colourSource) {
 
 class DynamicContrast extends Error {}
 
-module.exports = { createCompiler, parse, luminance, contrastRatio, parseHex, toOklch };
+module.exports = { createCompiler };
