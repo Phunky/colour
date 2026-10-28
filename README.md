@@ -49,6 +49,7 @@ Define your own `--colour()` after the library. Later definitions win:
 ) returns <color> {
   result: if(
     style(--value: primary): #6750a4;
+    style(--value: secondary): #03dac6;
     style(--value: success): #22c55e;
     style(--value: danger): #ef4444;
     else: var(--value)
@@ -134,14 +135,20 @@ Native CSS custom functions need Chrome or Edge 139+ (and `--colour-contrast()` 
 For those browsers, [`scripts/compiler.cjs`](./scripts/compiler.cjs) can compile `--colour*()` calls into relative-colour and `color-mix()` CSS at build time. Pass optional named colours explicitly:
 
 ```js
+const fs = require('node:fs');
 const { createCompiler } = require('./scripts/compiler.cjs');
 const { compileValue } = createCompiler(
   fs.readFileSync('src/colour.css', 'utf8'),
-  { paletteSource: fs.readFileSync('examples/material.css', 'utf8') }
+  {
+    paletteSource: fs.readFileSync(
+      'examples/material.css',
+      'utf8'
+    )
+  }
 );
 ```
 
-Without a `paletteSource`, unmapped identifiers keep ordinary CSS meaning. The compiler is not a general `@function` polyfill.
+Without a `paletteSource`, CSS named colours (`red`, `blue`, …) keep their ordinary meaning; other bare identifiers fail the build. Palette values may be hex, `oklch()`, `var()`, `light-dark()`, and other CSS colours. The compiler is not a general `@function` polyfill.
 
 ```sh
 npm install
