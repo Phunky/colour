@@ -22,7 +22,7 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .
 .section-lead { margin-top: 8px; color: #5b6876; max-width: 560px; }
 h3 { font-size: 15px; letter-spacing: -.2px; }
 /* Hero */
-.hero { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: center; padding: 64px 0 88px; }
+.hero { padding: 64px 0 88px; }
 .eyebrow { font-size: 13px; font-weight: 600; color: #5b6876; }
 h1 { font-size: clamp(40px, 5.6vw, 64px); line-height: 1.04; letter-spacing: -2.4px; margin: 14px 0 18px; }
 h1 span { color: #8a96a3; }
@@ -32,32 +32,35 @@ h1 span { color: #8a96a3; }
 .action:hover { border-color: #18212b; }
 .action-primary { background: #18212b; color: #fff; border-color: #18212b; }
 .action-primary:hover { background: #33414f; }
-.hero-example { display: grid; gap: 14px; }
-.alert { border: 1px solid; border-left-width: 4px; border-radius: 10px; padding: 14px 16px; font-weight: 600; font-size: 14px; }
-.alert { background: --colour-tint(85%, red); border-color: --colour(red); color: --colour-shade(45%, red); }
-/* Playground: --active, --on-active and --name follow the selected palette colour. */
+/* Playground: --active and --on-active follow the selected sample colour (literal hex). */
 @property --on-active { syntax: '<color>'; inherits: true; initial-value: #000; }
-main { --active: --colour(blue); --on-active: --colour-contrast(blue); --name: "blue"; }
-main:has(#tone-red:checked) { --active: --colour(red); --on-active: --colour-contrast(red); --name: "red"; }
-main:has(#tone-pink:checked) { --active: --colour(pink); --on-active: --colour-contrast(pink); --name: "pink"; }
-main:has(#tone-purple:checked) { --active: --colour(purple); --on-active: --colour-contrast(purple); --name: "purple"; }
-main:has(#tone-deep-purple:checked) { --active: --colour(deep-purple); --on-active: --colour-contrast(deep-purple); --name: "deep-purple"; }
-main:has(#tone-indigo:checked) { --active: --colour(indigo); --on-active: --colour-contrast(indigo); --name: "indigo"; }
-main:has(#tone-light-blue:checked) { --active: --colour(light-blue); --on-active: --colour-contrast(light-blue); --name: "light-blue"; }
-main:has(#tone-cyan:checked) { --active: --colour(cyan); --on-active: --colour-contrast(cyan); --name: "cyan"; }
-main:has(#tone-teal:checked) { --active: --colour(teal); --on-active: --colour-contrast(teal); --name: "teal"; }
-main:has(#tone-green:checked) { --active: --colour(green); --on-active: --colour-contrast(green); --name: "green"; }
-main:has(#tone-light-green:checked) { --active: --colour(light-green); --on-active: --colour-contrast(light-green); --name: "light-green"; }
-main:has(#tone-lime:checked) { --active: --colour(lime); --on-active: --colour-contrast(lime); --name: "lime"; }
-main:has(#tone-yellow:checked) { --active: --colour(yellow); --on-active: --colour-contrast(yellow); --name: "yellow"; }
-main:has(#tone-amber:checked) { --active: --colour(amber); --on-active: --colour-contrast(amber); --name: "amber"; }
-main:has(#tone-orange:checked) { --active: --colour(orange); --on-active: --colour-contrast(orange); --name: "orange"; }
-main:has(#tone-deep-orange:checked) { --active: --colour(deep-orange); --on-active: --colour-contrast(deep-orange); --name: "deep-orange"; }
-main:has(#tone-brown:checked) { --active: --colour(brown); --on-active: --colour-contrast(brown); --name: "brown"; }
-main:has(#tone-grey:checked) { --active: --colour(grey); --on-active: --colour-contrast(grey); --name: "grey"; }
-main:has(#tone-blue-grey:checked) { --active: --colour(blue-grey); --on-active: --colour-contrast(blue-grey); --name: "blue-grey"; }
-main:has(#tone-black:checked) { --active: --colour(black); --on-active: --colour-contrast(black); --name: "black"; }
-main:has(#tone-white:checked) { --active: --colour(white); --on-active: --colour-contrast(white); --name: "white"; }
+main { --active: #2196f3; --on-active: --colour-contrast(#2196f3); --name: "blue"; }
+main:has(#tone-red:checked) { --active: #f44336; --on-active: --colour-contrast(#f44336); --name: "red"; }
+main:has(#tone-pink:checked) { --active: #e91e63; --on-active: --colour-contrast(#e91e63); --name: "pink"; }
+main:has(#tone-purple:checked) { --active: #9c27b0; --on-active: --colour-contrast(#9c27b0); --name: "purple"; }
+main:has(#tone-deep-purple:checked) { --active: #673ab7; --on-active: --colour-contrast(#673ab7); --name: "deep-purple"; }
+main:has(#tone-indigo:checked) { --active: #3f51b5; --on-active: --colour-contrast(#3f51b5); --name: "indigo"; }
+main:has(#tone-light-blue:checked) { --active: #03a9f4; --on-active: --colour-contrast(#03a9f4); --name: "light-blue"; }
+main:has(#tone-cyan:checked) { --active: #00bcd4; --on-active: --colour-contrast(#00bcd4); --name: "cyan"; }
+main:has(#tone-teal:checked) { --active: #009688; --on-active: --colour-contrast(#009688); --name: "teal"; }
+main:has(#tone-green:checked) { --active: #4caf50; --on-active: --colour-contrast(#4caf50); --name: "green"; }
+main:has(#tone-light-green:checked) { --active: #8bc34a; --on-active: --colour-contrast(#8bc34a); --name: "light-green"; }
+main:has(#tone-lime:checked) { --active: #cddc39; --on-active: --colour-contrast(#cddc39); --name: "lime"; }
+main:has(#tone-yellow:checked) { --active: #ffeb3b; --on-active: --colour-contrast(#ffeb3b); --name: "yellow"; }
+main:has(#tone-amber:checked) { --active: #ffc107; --on-active: --colour-contrast(#ffc107); --name: "amber"; }
+main:has(#tone-orange:checked) { --active: #ff9800; --on-active: --colour-contrast(#ff9800); --name: "orange"; }
+main:has(#tone-deep-orange:checked) { --active: #ff5722; --on-active: --colour-contrast(#ff5722); --name: "deep-orange"; }
+main:has(#tone-brown:checked) { --active: #795548; --on-active: --colour-contrast(#795548); --name: "brown"; }
+main:has(#tone-grey:checked) { --active: #9e9e9e; --on-active: --colour-contrast(#9e9e9e); --name: "grey"; }
+main:has(#tone-blue-grey:checked) { --active: #607d8b; --on-active: --colour-contrast(#607d8b); --name: "blue-grey"; }
+main:has(#tone-black:checked) { --active: #000; --on-active: --colour-contrast(#000); --name: "black"; }
+main:has(#tone-white:checked) { --active: #fff; --on-active: --colour-contrast(#fff); --name: "white"; }
+main { --mix-with: #e91e63; --mix-name: "pink"; }
+main:has(#mix-amber:checked) { --mix-with: #ffc107; --mix-name: "amber"; }
+main:has(#mix-teal:checked) { --mix-with: #009688; --mix-name: "teal"; }
+main:has(#mix-deep-orange:checked) { --mix-with: #ff5722; --mix-name: "deep-orange"; }
+main:has(#mix-white:checked) { --mix-with: #fff; --mix-name: "white"; }
+main:has(#mix-black:checked) { --mix-with: #000; --mix-name: "black"; }
 .palette { display: flex; flex-wrap: wrap; gap: 10px; border: 0; padding: 0; margin: 28px 0 24px; }
 .palette-option { position: relative; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; background: var(--swatch); box-shadow: inset 0 0 0 1px #0000001f; transition: transform .12s; }
 .palette-option:hover { transform: scale(1.12); }
@@ -66,24 +69,42 @@ main:has(#tone-white:checked) { --active: --colour(white); --on-active: --colour
 /* Radio rings use :focus because WebKit drops :focus-visible when arrow keys move the selection. */
 .palette-option:has(input:focus) { outline: 2px solid #1d6fd8; outline-offset: 6px; }
 .active-name::before { content: var(--name); }
+.mix-name::before { content: var(--mix-name); }
 .playground { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 32px; align-items: start; }
-.preview { background: var(--active); color: var(--on-active); border-radius: 18px; padding: 28px; min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; box-shadow: inset 0 0 0 1px #0000000f; }
+.preview { position: sticky; top: 24px; background: var(--active); color: var(--on-active); border-radius: 18px; padding: 28px; min-height: 340px; display: flex; flex-direction: column; justify-content: space-between; gap: 24px; box-shadow: inset 0 0 0 1px #0000000f; }
 .preview-name { font-size: 44px; font-weight: 800; letter-spacing: -1.6px; line-height: 1; }
 .preview .code { background: --colour-opacity(0.12); color: inherit; }
 .contrast-result, .is-black, .is-white { display: none; }
 @container style(--on-active: black) { .contrast-result, .is-black { display: inline; } }
 @container style(--on-active: white) { .contrast-result, .is-white { display: inline; } }
 .variations { display: grid; gap: 22px; }
-.variation h3 small { font-weight: 500; color: #7a8693; font-size: 13px; margin-left: 6px; }
-.tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+.variation h3 small, .scale h3 small { font-weight: 500; color: #7a8693; font-size: 13px; margin-left: 6px; }
+.tiles { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 12px; margin-top: 10px; }
 .tile i { display: block; height: 64px; border-radius: 12px; box-shadow: inset 0 0 0 1px #0000000f; }
 .tile figcaption { margin-top: 7px; font-size: 12px; color: #4b5a69; overflow-wrap: anywhere; }
 .tile[data-fn="lighten"] i { background: --colour-lighten(15, var(--active)); }
 .tile[data-fn="darken"] i { background: --colour-darken(15, var(--active)); }
+.tile[data-fn="saturate"] i { background: --colour-saturate(30, var(--active)); }
+.tile[data-fn="desaturate"] i { background: --colour-desaturate(40, var(--active)); }
 .tile[data-fn="tint"] i { background: --colour-tint(50%, var(--active)); }
 .tile[data-fn="shade"] i { background: --colour-shade(40%, var(--active)); }
-.tile[data-fn="tone"] i { background: --colour-tone(85%, var(--active)); }
-.tile[data-fn="chroma"] i { background: --colour-chroma(0.3, var(--active)); }
+.alpha i { position: relative; background: repeating-conic-gradient(#e6e9ed 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
+.alpha i::before { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.tile[data-fn="opacity"] i::before { background: --colour-opacity(0.5, var(--active)); }
+.tile[data-fn="rgba"] i::before { background: --colour-rgba(0.25, var(--active)); }
+.tile[data-fn="fade"] i::before { background: --colour-fade(0.5, --colour-opacity(0.6, var(--active))); }
+.scales { display: grid; gap: 28px; margin-top: 44px; }
+.scale p { margin-top: 2px; font-size: 12px; color: #4b5a69; }
+.scale-steps { display: flex; gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; }
+.scale-steps li { flex: 1 1 0; min-width: 0; text-align: center; font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace; color: #6b7785; }
+.scale-steps i { display: block; height: 52px; margin-bottom: 7px; border-radius: 8px; box-shadow: inset 0 0 0 1px #0000000f; }
+.scale-steps .is-base { color: #18212b; font-weight: 700; }
+.mix-picker { display: flex; flex-wrap: wrap; gap: 6px; border: 0; padding: 0; margin: 10px 0 8px; }
+.mix-option { position: relative; display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 5px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #4b5a69; cursor: pointer; box-shadow: inset 0 0 0 1px #e1e5ea; }
+.mix-option i { width: 14px; height: 14px; border-radius: 50%; box-shadow: inset 0 0 0 1px #0000001f; }
+.mix-option input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.mix-option:has(input:checked) { color: #18212b; box-shadow: inset 0 0 0 2px #18212b; }
+.mix-option:has(input:focus) { outline: 2px solid #1d6fd8; outline-offset: 2px; }
 .current { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px 32px; align-items: center; margin-top: 44px; padding-top: 28px; border-top: 1px dashed #e1e5ea; }
 .current > p:first-child { color: #4b5a69; max-width: 520px; }
 .current .code { grid-row: span 2; }
@@ -92,7 +113,7 @@ main:has(#tone-white:checked) { --active: --colour(white); --on-active: --colour
 .tag { background: --colour-tint(85%); border-color: --colour-tint(60%); }
 /* Composition: the stage's color-scheme is the only thing the scheme switch changes. */
 .compose { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; align-items: start; margin-top: 28px; }
-.stage { color-scheme: light dark; border-radius: 18px; padding: 24px; display: grid; gap: 22px; background: light-dark(--colour-tone(97%, --colour-chroma(0.2, blue-grey)), --colour-tone(16%, --colour-chroma(0.4, blue-grey))); }
+.stage { color-scheme: light dark; border-radius: 18px; padding: 24px; display: grid; gap: 22px; background: light-dark(--colour-tone(97%, --colour-chroma(0.2, #607d8b)), --colour-tone(16%, --colour-chroma(0.4, #607d8b))); }
 main:has(#scheme-light:checked) .stage { color-scheme: light; }
 main:has(#scheme-dark:checked) .stage { color-scheme: dark; }
 .scheme { display: flex; gap: 4px; justify-self: start; border: 0; margin: 0; padding: 4px; border-radius: 999px; background: light-dark(#0000000d, #ffffff1a); color: light-dark(#18212b, #e8edf2); }
@@ -103,18 +124,13 @@ main:has(#scheme-dark:checked) .stage { color-scheme: dark; }
 .card { border-radius: 14px; padding: 26px; display: grid; gap: 10px; justify-items: start; box-shadow: 0 1px 3px #0000001a; }
 .card h3 { font-size: 20px; }
 .card p { font-size: 14px; opacity: .8; }
-.card { --surface: light-dark(--colour(white), --colour-tone(25%, blue-grey)); background: var(--surface); color: light-dark(#000, #fff); color: --colour-contrast(var(--surface)); }
+.card { --surface: light-dark(#fff, --colour-tone(25%, #607d8b)); background: var(--surface); color: light-dark(#000, #fff); color: --colour-contrast(var(--surface)); }
 .button { font: inherit; font-weight: 700; font-size: 14px; padding: 10px 18px; margin-top: 8px; border: 2px solid; border-radius: 10px; cursor: pointer; }
-.button { --background: --colour-tone(65%, --colour-mix(35%, blue, purple)); background: var(--background); color: #000; color: --colour-contrast(var(--background)); border-color: --colour-darken(15, var(--background)); &:hover { background: --colour-darken(10, var(--background)); } }
-/* Get started */
-.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 28px; }
-.steps p { margin: 6px 0 12px; color: #4b5a69; font-size: 14px; }
-.reference-title { margin-top: 48px; }
-.reference { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 32px; margin: 12px 0 0; }
-.reference div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; padding: 9px 0; border-bottom: 1px solid #eceff2; font-size: 13px; }
-.reference dd { margin: 0; color: #5b6876; }
-.reference-note { margin-top: 18px; font-size: 14px; color: #4b5a69; }
+/* Change the effective surface, not just background: contrast text follows it. */
+.button { --base: --colour-tone(65%, --colour-mix(35%, #2196f3, #9c27b0)); --background: var(--base); background: var(--background); color: #000; color: --colour-contrast(var(--background)); border-color: --colour-darken(15, var(--background)); &:hover, &:focus-visible { --background: --colour-darken(10, var(--base)); } }
+/* The compiled demo needs an explicit hover foreground on older browsers. */
+@supports not (color: contrast-color(red)) { .button:is(:hover, :focus-visible) { color: #fff; } }
 .footer { padding-top: 28px; padding-bottom: 40px; border-top: 1px solid #eceff2; font-size: 13px; color: #6b7785; }
-@media (max-width: 860px) { .hero, .playground, .compose { grid-template-columns: 1fr; } .hero { gap: 36px; padding-top: 40px; } .steps { grid-template-columns: 1fr; gap: 20px; } .reference { grid-template-columns: 1fr; } .current { grid-template-columns: 1fr; } .current .code { grid-row: auto; } }
-@media (max-width: 520px) { .site-header, main, .footer { padding-left: 18px; padding-right: 18px; } .site-header { flex-direction: column; align-items: flex-start; } .section { padding: 52px 0; } .preview { min-height: 260px; padding: 22px; } .preview-name { font-size: 36px; } .code { font-size: 11.5px; padding: 12px; } .palette { gap: 8px; } }
+@media (max-width: 860px) { .playground, .compose { grid-template-columns: 1fr; } .preview { position: static; } .hero { padding-top: 40px; } .current { grid-template-columns: 1fr; } .current .code { grid-row: auto; } }
+@media (max-width: 520px) { .site-header, main, .footer { padding-left: 18px; padding-right: 18px; } .site-header { flex-direction: column; align-items: flex-start; } .section { padding: 52px 0; } .preview { min-height: 260px; padding: 22px; } .preview-name { font-size: 36px; } .code { font-size: 11.5px; padding: 12px; } .palette { gap: 8px; } .scale-steps { gap: 3px; } .scale-steps li { font-size: 9px; } .scale-steps i { height: 40px; border-radius: 6px; } }
 @media (prefers-reduced-motion: reduce) { :root { scroll-behavior: auto; } .palette-option { transition: none; } }

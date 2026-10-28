@@ -8,17 +8,19 @@
  * custom functions.
  *
  * Alongside the CSS it evaluates colours that are fully known at build time
- * (palette names, hex, literal rgb()/hsl(), and library transformations of
- * those, including the OKLCH ones). --colour-contrast() uses that to offer a
- * static black/white fallback, chosen with the WCAG 2.x contrast ratio, for
- * browsers without contrast-color(). Runtime colours (var(), currentColor,
- * other literal colour spaces), results outside the sRGB gamut and near-ties
- * are never guessed.
+ * (hex, literal rgb()/hsl(), optional named colours, and library
+ * transformations of those, including the OKLCH ones). --colour-contrast()
+ * uses that to offer a static black/white fallback, chosen with the WCAG 2.x
+ * contrast ratio, for browsers without contrast-color(). Runtime colours
+ * (var(), currentColor, other literal colour spaces), results outside the
+ * sRGB gamut and near-ties are never guessed.
  *
  * Scope: only the 16 library functions defined in src/colour.css are compiled.
  * It is NOT a general-purpose @function polyfill: any other dashed function
- * throws, and palette names can only be resolved where they appear literally
- * (a var() holding a palette name is passed through as a CSS colour).
+ * throws. Named colours are optional: pass palette CSS (for example
+ * examples/material.css) via createCompiler(source, { paletteSource }).
+ * Unmapped identifiers keep their CSS meaning (so red is CSS red, not a
+ * Material hex). A var() holding a name is passed through untouched.
  */
 
 // Amount type of every (amount, colour = currentColor) function, with the
@@ -40,14 +42,92 @@ const SIGNATURES = {
 };
 const MIX_RANGE = { kind: 'percentage', min: 0, max: 1 };
 
-function readPalette(colourSource) {
-  const fn = colourSource.match(/@function\s+--colour\([^]*?\n\}/);
-  if (!fn) throw Error('Cannot locate --colour() source function');
-  const palette = new Map();
-  for (const [, name, hex] of fn[0].matchAll(/style\(--value:\s*([\w-]+)\):\s*(#[\da-fA-F]{3,8});/g)) {
-    palette.set(name, hex);
+// CSS Color Level 4 named colours and keywords. Unmapped idents that are not
+// in this set are treated as unresolved custom palette names and fail the build.
+const CSS_COLOUR_KEYWORDS = new Set(`
+  transparent currentcolor
+  black silver gray grey white maroon red purple fuchsia magenta green lime
+  olive yellow navy blue teal aqua cyan
+  aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond
+  blue blueviolet brown burlywood cadetblue chartreuse chocolate coral
+  cornflowerblue cornsilk crimson cyan darkblue darkcyan darkgoldenrod darkgray
+  darkgreen darkgrey darkkhaki darkmagenta darkolivegreen darkorange darkorchid
+  darkred darksalmon darkseagreen darkslateblue darkslategray darkslategrey
+  darkturquoise darkviolet deeppink deepskyblue dimgray dimgrey dodgerblue
+  firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite gold goldenrod
+  gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki
+  lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan
+  lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon
+  lightseagreen lightskyblue lightslategray lightslategrey lightsteelblue
+  lightyellow lime limegreen linen magenta maroon mediumaquamarine mediumblue
+  mediumorchid mediumpurple mediumseagreen mediumslateblue mediumspringgreen
+  mediumturquoise mediumvioletred midnightblue mintcream mistyrose moccasin
+  navajowhite navy oldlace olive olivedrab orange orangered orchid palegoldenrod
+  palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum
+  powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon
+  sandybrown seagreen seashell sienna silver skyblue slateblue slategray
+  slategrey snow springgreen steelblue tan teal thistle tomato turquoise violet
+  wheat white whitesmoke yellow yellowgreen
+`.trim().split(/\s+/));
+
+// Slice the first @function --colour(...) { ... } with balanced braces.
+function extractColourFunction(source) {
+  const start = source.search(/@function\s+--colour\s*\(/);
+  if (start < 0) return null;
+  const open = source.indexOf('{', start);
+  if (open < 0) return null;
+  let depth = 0;
+  for (let i = open; i < source.length; i++) {
+    const ch = source[i];
+    if (ch === '"' || ch === "'") {
+      const quote = ch;
+      i++;
+      while (i < source.length && source[i] !== quote) i += source[i] === '\\' ? 2 : 1;
+      continue;
+    }
+    if (ch === '{') depth++;
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0) return source.slice(start, i + 1);
+    }
   }
-  if (palette.size !== 21) throw Error(`Expected 21 palette entries, found ${palette.size}`);
+  return null;
+}
+
+// Reads style(--value: name): <any CSS colour expression>; entries from a
+// --colour() @function. Values may be hex, named colours, var(), oklch(),
+// light-dark(), color-mix(), etc. Empty when the source has no named colours.
+function readPalette(source) {
+  const palette = new Map();
+  const fn = extractColourFunction(source);
+  if (!fn) return palette;
+  const re = /style\(\s*--value\s*:\s*([\w-]+)\s*\)\s*:/g;
+  let match;
+  while ((match = re.exec(fn))) {
+    let i = match.index + match[0].length;
+    while (i < fn.length && /\s/.test(fn[i])) i++;
+    const start = i;
+    let depth = 0;
+    while (i < fn.length) {
+      const ch = fn[i];
+      if (ch === '"' || ch === "'") {
+        const quote = ch;
+        i++;
+        while (i < fn.length && fn[i] !== quote) i += fn[i] === '\\' ? 2 : 1;
+        i++;
+        continue;
+      }
+      if (ch === '(') depth++;
+      else if (ch === ')') {
+        if (depth === 0) break;
+        depth--;
+      } else if (ch === ';' && depth === 0) break;
+      i++;
+    }
+    const value = fn.slice(start, i).trim();
+    if (!value) throw Error(`Palette entry "${match[1]}" has an empty colour value`);
+    palette.set(match[1], value);
+  }
   return palette;
 }
 
@@ -125,6 +205,7 @@ function serialise(nodes) {
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 function parseHex(hex) {
+  if (!/^#(?:[\da-f]{3}|[\da-f]{4}|[\da-f]{6}|[\da-f]{8})$/i.test(hex)) return null;
   let h = hex.slice(1);
   if (h.length <= 4) h = [...h].map(c => c + c).join('');
   const n = i => parseInt(h.slice(i, i + 2), 16) / 255;
@@ -245,8 +326,12 @@ function contrastChoice(background) {
   return white > black ? '#fff' : '#000';
 }
 
-function createCompiler(colourSource) {
-  const palette = readPalette(colourSource);
+function createCompiler(colourSource, options = {}) {
+  // Optional named colours come from later --colour() sources; later entries win.
+  const palette = new Map();
+  for (const source of [colourSource, ...[].concat(options.paletteSource || [])]) {
+    for (const [name, value] of readPalette(source)) palette.set(name, value);
+  }
   const accent = readAccents(colourSource);
 
   // A colour argument must be one component value: an identifier, a hex colour or a single function.
@@ -259,8 +344,17 @@ function createCompiler(colourSource) {
     }
     if (only.type === 'function') return compileNode(only, mode);
     const ident = only.value.trim();
-    const css = palette.get(ident) || ident;
-    return { css, rgb: staticText(css) };
+    if (ident.startsWith('#')) {
+      if (!parseHex(ident)) throw Error(`${call}: invalid hex colour "${ident}"`);
+      return { css: ident, rgb: parseHex(ident) };
+    }
+    // Optional named colours may be any CSS colour expression, including var()
+    // and native colour functions; compile the stored value so nested forms work.
+    if (palette.has(ident)) return compileNodes(parse(palette.get(ident)), mode);
+    if (CSS_COLOUR_KEYWORDS.has(ident.toLowerCase())) {
+      return { css: ident, rgb: staticText(ident) };
+    }
+    throw Error(`${call}: unresolved colour name "${ident}". Define it in an optional --colour() palette (pass paletteSource to createCompiler), or use a CSS colour, hex value or var()`);
   }
 
   function staticText(text) {
@@ -434,4 +528,4 @@ function createCompiler(colourSource) {
 
 class DynamicContrast extends Error {}
 
-module.exports = { createCompiler, parse, luminance, contrastRatio, parseHex, toOklch };
+module.exports = { createCompiler };

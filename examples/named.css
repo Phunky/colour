@@ -1,0 +1,19 @@
+/*
+ * Optional semantic palette. Load after colour.css to define your own names:
+ *
+ *   <link rel="stylesheet" href="colour.css">
+ *   <link rel="stylesheet" href="examples/named.css">
+ *
+ * Then: background: --colour(primary); border-color: --colour-darken(15, danger);
+ */
+@function --colour(--value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: if(
+    style(--value: primary): #6750a4;
+    style(--value: secondary): #03dac6;
+    style(--value: success): #22c55e;
+    style(--value: warning): #f59e0b;
+    style(--value: danger): #ef4444;
+    style(--value: surface): #f4f4f5;
+    else: var(--value)
+  );
+}

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 /*
  * Builds the native and Safari-compatible demos into dist/.
- * Palette values and accent offsets are read exclusively from src/colour.css;
- * the compatibility CSS is produced by scripts/compiler.cjs at build time, so
- * neither demo needs browser-side JavaScript.
+ * Accent offsets are read from src/colour.css; the demo uses literal CSS
+ * colours, so the compiler needs no named palette. Optional palettes
+ * (examples/*.css) can be passed to createCompiler via paletteSource when
+ * compiling other stylesheets.
  */
 const fs = require('node:fs');
 const path = require('node:path');
@@ -15,7 +16,7 @@ const read = p => fs.readFileSync(path.join(root, p), 'utf8');
 const write = (p, v) => fs.writeFileSync(path.join(root, p), v, 'utf8');
 const colourSource = read('src/colour.css');
 const demoSource = read('src/demo.css');
-const { compileValue, compileFallback, usesContrast, palette, accent } = createCompiler(colourSource);
+const { compileValue, compileFallback, usesContrast, accent } = createCompiler(colourSource);
 
 const htmlSource = read('src/index.html');
 const CONTRAST_SUPPORTS = '(color: contrast-color(red))';
@@ -118,4 +119,4 @@ write('dist/index.html', buildHTML('compat'));
 write('dist/index-native.html', buildHTML('native'));
 write('dist/standalone-compatible.html', buildHTML('compat', true));
 write('dist/standalone-native.html', buildHTML('native', true));
-console.log(`Built CSS/HTML for ${palette.size} colours and ${accent.size} accents; compatibility CSS has no native custom-function calls.`);
+console.log(`Built CSS/HTML with ${accent.size} accent levels; compatibility CSS has no native custom-function calls.`);

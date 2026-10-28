@@ -12,71 +12,156 @@
 <div class="support-warning" role="note">This page uses native CSS <code>@function</code>, available in Chrome and Edge 139+. <a href="index.html">Open the compatible build</a>.</div>
 <header class="site-header">
   <a class="brand" href="#top">colour</a>
-  <nav class="nav" aria-label="Main"><a href="#playground">Playground</a><a href="#composition">Composition</a><a href="#get-started">Get started</a><a href="https://github.com/Phunky/colour">GitHub</a></nav>
+  <nav class="nav" aria-label="Main"><a href="#playground">Playground</a><a href="#composition">Composition</a><a href="https://github.com/Phunky/colour">GitHub</a></nav>
 </header>
 <main id="top">
   <section class="hero" aria-labelledby="hero-title">
-    <div>
-      <p class="eyebrow">Sass in 2015. Native CSS now.</p>
-      <h1 id="hero-title">Colour manipulation. <span>Just CSS.</span></h1>
-      <p class="lead">A composable colour toolkit powered by native CSS functions. No Sass. No JavaScript.</p>
-      <p class="actions"><a class="action action-primary" href="#playground">Open the playground</a><a class="action" href="https://github.com/Phunky/colour">View on GitHub</a></p>
-    </div>
-    <figure class="hero-example">
-      <pre class="code"><code>.alert {
-  background: --colour-tint(85%, red);
-  border-color: --colour(red);
-  color: --colour-shade(45%, red);
-}</code></pre>
-      <p class="alert">Payment failed. Check your card details.</p>
-    </figure>
+    <p class="eyebrow">Sass in 2015. Native CSS now.</p>
+    <h1 id="hero-title">Colour manipulation. <span>Just CSS.</span></h1>
+    <p class="lead">A composable colour toolkit powered by native CSS functions. No Sass. No JavaScript.</p>
+    <p class="actions"><a class="action action-primary" href="#playground">Open the playground</a><a class="action" href="https://github.com/Phunky/colour">View on GitHub</a></p>
   </section>
 
   <section class="section" id="playground" aria-labelledby="playground-title">
     <h2 id="playground-title">Playground</h2>
     <p class="section-lead">Pick a colour. Every swatch is computed by the CSS beneath it.</p>
     <fieldset class="palette"><legend class="sr-only">Colour</legend>
-<label class="palette-option" style="--swatch: --colour(red);" title="red"><input id="tone-red" type="radio" name="palette" value="red"><span class="sr-only">red</span></label>
-<label class="palette-option" style="--swatch: --colour(pink);" title="pink"><input id="tone-pink" type="radio" name="palette" value="pink"><span class="sr-only">pink</span></label>
-<label class="palette-option" style="--swatch: --colour(purple);" title="purple"><input id="tone-purple" type="radio" name="palette" value="purple"><span class="sr-only">purple</span></label>
-<label class="palette-option" style="--swatch: --colour(deep-purple);" title="deep-purple"><input id="tone-deep-purple" type="radio" name="palette" value="deep-purple"><span class="sr-only">deep-purple</span></label>
-<label class="palette-option" style="--swatch: --colour(indigo);" title="indigo"><input id="tone-indigo" type="radio" name="palette" value="indigo"><span class="sr-only">indigo</span></label>
-<label class="palette-option" style="--swatch: --colour(blue);" title="blue"><input id="tone-blue" type="radio" name="palette" value="blue" checked><span class="sr-only">blue</span></label>
-<label class="palette-option" style="--swatch: --colour(light-blue);" title="light-blue"><input id="tone-light-blue" type="radio" name="palette" value="light-blue"><span class="sr-only">light-blue</span></label>
-<label class="palette-option" style="--swatch: --colour(cyan);" title="cyan"><input id="tone-cyan" type="radio" name="palette" value="cyan"><span class="sr-only">cyan</span></label>
-<label class="palette-option" style="--swatch: --colour(teal);" title="teal"><input id="tone-teal" type="radio" name="palette" value="teal"><span class="sr-only">teal</span></label>
-<label class="palette-option" style="--swatch: --colour(green);" title="green"><input id="tone-green" type="radio" name="palette" value="green"><span class="sr-only">green</span></label>
-<label class="palette-option" style="--swatch: --colour(light-green);" title="light-green"><input id="tone-light-green" type="radio" name="palette" value="light-green"><span class="sr-only">light-green</span></label>
-<label class="palette-option" style="--swatch: --colour(lime);" title="lime"><input id="tone-lime" type="radio" name="palette" value="lime"><span class="sr-only">lime</span></label>
-<label class="palette-option" style="--swatch: --colour(yellow);" title="yellow"><input id="tone-yellow" type="radio" name="palette" value="yellow"><span class="sr-only">yellow</span></label>
-<label class="palette-option" style="--swatch: --colour(amber);" title="amber"><input id="tone-amber" type="radio" name="palette" value="amber"><span class="sr-only">amber</span></label>
-<label class="palette-option" style="--swatch: --colour(orange);" title="orange"><input id="tone-orange" type="radio" name="palette" value="orange"><span class="sr-only">orange</span></label>
-<label class="palette-option" style="--swatch: --colour(deep-orange);" title="deep-orange"><input id="tone-deep-orange" type="radio" name="palette" value="deep-orange"><span class="sr-only">deep-orange</span></label>
-<label class="palette-option" style="--swatch: --colour(brown);" title="brown"><input id="tone-brown" type="radio" name="palette" value="brown"><span class="sr-only">brown</span></label>
-<label class="palette-option" style="--swatch: --colour(grey);" title="grey"><input id="tone-grey" type="radio" name="palette" value="grey"><span class="sr-only">grey</span></label>
-<label class="palette-option" style="--swatch: --colour(blue-grey);" title="blue-grey"><input id="tone-blue-grey" type="radio" name="palette" value="blue-grey"><span class="sr-only">blue-grey</span></label>
-<label class="palette-option" style="--swatch: --colour(black);" title="black"><input id="tone-black" type="radio" name="palette" value="black"><span class="sr-only">black</span></label>
-<label class="palette-option" style="--swatch: --colour(white);" title="white"><input id="tone-white" type="radio" name="palette" value="white"><span class="sr-only">white</span></label>
+<label class="palette-option" style="--swatch: #f44336;" title="red"><input id="tone-red" type="radio" name="palette" value="red"><span class="sr-only">red</span></label>
+<label class="palette-option" style="--swatch: #e91e63;" title="pink"><input id="tone-pink" type="radio" name="palette" value="pink"><span class="sr-only">pink</span></label>
+<label class="palette-option" style="--swatch: #9c27b0;" title="purple"><input id="tone-purple" type="radio" name="palette" value="purple"><span class="sr-only">purple</span></label>
+<label class="palette-option" style="--swatch: #673ab7;" title="deep-purple"><input id="tone-deep-purple" type="radio" name="palette" value="deep-purple"><span class="sr-only">deep-purple</span></label>
+<label class="palette-option" style="--swatch: #3f51b5;" title="indigo"><input id="tone-indigo" type="radio" name="palette" value="indigo"><span class="sr-only">indigo</span></label>
+<label class="palette-option" style="--swatch: #2196f3;" title="blue"><input id="tone-blue" type="radio" name="palette" value="blue" checked><span class="sr-only">blue</span></label>
+<label class="palette-option" style="--swatch: #03a9f4;" title="light-blue"><input id="tone-light-blue" type="radio" name="palette" value="light-blue"><span class="sr-only">light-blue</span></label>
+<label class="palette-option" style="--swatch: #00bcd4;" title="cyan"><input id="tone-cyan" type="radio" name="palette" value="cyan"><span class="sr-only">cyan</span></label>
+<label class="palette-option" style="--swatch: #009688;" title="teal"><input id="tone-teal" type="radio" name="palette" value="teal"><span class="sr-only">teal</span></label>
+<label class="palette-option" style="--swatch: #4caf50;" title="green"><input id="tone-green" type="radio" name="palette" value="green"><span class="sr-only">green</span></label>
+<label class="palette-option" style="--swatch: #8bc34a;" title="light-green"><input id="tone-light-green" type="radio" name="palette" value="light-green"><span class="sr-only">light-green</span></label>
+<label class="palette-option" style="--swatch: #cddc39;" title="lime"><input id="tone-lime" type="radio" name="palette" value="lime"><span class="sr-only">lime</span></label>
+<label class="palette-option" style="--swatch: #ffeb3b;" title="yellow"><input id="tone-yellow" type="radio" name="palette" value="yellow"><span class="sr-only">yellow</span></label>
+<label class="palette-option" style="--swatch: #ffc107;" title="amber"><input id="tone-amber" type="radio" name="palette" value="amber"><span class="sr-only">amber</span></label>
+<label class="palette-option" style="--swatch: #ff9800;" title="orange"><input id="tone-orange" type="radio" name="palette" value="orange"><span class="sr-only">orange</span></label>
+<label class="palette-option" style="--swatch: #ff5722;" title="deep-orange"><input id="tone-deep-orange" type="radio" name="palette" value="deep-orange"><span class="sr-only">deep-orange</span></label>
+<label class="palette-option" style="--swatch: #795548;" title="brown"><input id="tone-brown" type="radio" name="palette" value="brown"><span class="sr-only">brown</span></label>
+<label class="palette-option" style="--swatch: #9e9e9e;" title="grey"><input id="tone-grey" type="radio" name="palette" value="grey"><span class="sr-only">grey</span></label>
+<label class="palette-option" style="--swatch: #607d8b;" title="blue-grey"><input id="tone-blue-grey" type="radio" name="palette" value="blue-grey"><span class="sr-only">blue-grey</span></label>
+<label class="palette-option" style="--swatch: #000;" title="black"><input id="tone-black" type="radio" name="palette" value="black"><span class="sr-only">black</span></label>
+<label class="palette-option" style="--swatch: #fff;" title="white"><input id="tone-white" type="radio" name="palette" value="white"><span class="sr-only">white</span></label>
     </fieldset>
     <div class="playground">
       <div class="preview">
         <p class="preview-name active-name"></p>
-        <pre class="code"><code>background: --colour(<span class="active-name"></span>);
-color: --colour-contrast(<span class="active-name"></span>);<span class="contrast-result"> /* <span class="is-black">black</span><span class="is-white">white</span> */</span></code></pre>
+        <pre class="code"><code>background: var(--active);
+color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span class="is-black">black</span><span class="is-white">white</span> */</span></code></pre>
       </div>
       <div class="variations">
         <div class="variation"><h3>Lighten &amp; darken <small>HSL lightness</small></h3><div class="tiles">
-          <figure class="tile" data-fn="lighten"><i></i><figcaption><code>--colour-lighten(15, <span class="active-name"></span>)</code></figcaption></figure>
-          <figure class="tile" data-fn="darken"><i></i><figcaption><code>--colour-darken(15, <span class="active-name"></span>)</code></figcaption></figure>
+          <figure class="tile" data-fn="lighten"><i></i><figcaption><code>--colour-lighten(15, var(--active))</code></figcaption></figure>
+          <figure class="tile" data-fn="darken"><i></i><figcaption><code>--colour-darken(15, var(--active))</code></figcaption></figure>
+        </div></div>
+        <div class="variation"><h3>Saturate &amp; desaturate <small>HSL saturation</small></h3><div class="tiles">
+          <figure class="tile" data-fn="saturate"><i></i><figcaption><code>--colour-saturate(30, var(--active))</code></figcaption></figure>
+          <figure class="tile" data-fn="desaturate"><i></i><figcaption><code>--colour-desaturate(40, var(--active))</code></figcaption></figure>
         </div></div>
         <div class="variation"><h3>Tint &amp; shade <small>mixed with white or black</small></h3><div class="tiles">
-          <figure class="tile" data-fn="tint"><i></i><figcaption><code>--colour-tint(50%, <span class="active-name"></span>)</code></figcaption></figure>
-          <figure class="tile" data-fn="shade"><i></i><figcaption><code>--colour-shade(40%, <span class="active-name"></span>)</code></figcaption></figure>
+          <figure class="tile" data-fn="tint"><i></i><figcaption><code>--colour-tint(50%, var(--active))</code></figcaption></figure>
+          <figure class="tile" data-fn="shade"><i></i><figcaption><code>--colour-shade(40%, var(--active))</code></figcaption></figure>
         </div></div>
-        <div class="variation"><h3>Tone &amp; chroma <small>perceptual OKLCH</small></h3><div class="tiles">
-          <figure class="tile" data-fn="tone"><i></i><figcaption><code>--colour-tone(85%, <span class="active-name"></span>)</code></figcaption></figure>
-          <figure class="tile" data-fn="chroma"><i></i><figcaption><code>--colour-chroma(0.3, <span class="active-name"></span>)</code></figcaption></figure>
+        <div class="variation"><h3>Opacity &amp; fade <small>set or multiply alpha</small></h3><div class="tiles alpha">
+          <figure class="tile" data-fn="opacity"><i></i><figcaption><code>--colour-opacity(0.5, var(--active))</code></figcaption></figure>
+          <figure class="tile" data-fn="rgba"><i></i><figcaption><code>--colour-rgba(0.25, var(--active))</code></figcaption></figure>
+          <figure class="tile" data-fn="fade"><i></i><figcaption><code>--colour-fade(0.5, --colour-opacity(0.6, var(--active)))</code></figcaption></figure>
         </div></div>
+      </div>
+    </div>
+    <div class="scales">
+      <div class="scale" data-fn="accent">
+        <h3>Accent <small>HSL scale, 500 is the base</small></h3>
+        <p><code>--colour-accent(level, var(--active))</code></p>
+        <ol class="scale-steps">
+<li><i style="background: --colour-accent(50, var(--active));"></i>50</li>
+<li><i style="background: --colour-accent(100, var(--active));"></i>100</li>
+<li><i style="background: --colour-accent(200, var(--active));"></i>200</li>
+<li><i style="background: --colour-accent(300, var(--active));"></i>300</li>
+<li><i style="background: --colour-accent(400, var(--active));"></i>400</li>
+<li class="is-base"><i style="background: --colour-accent(500, var(--active));"></i>500</li>
+<li><i style="background: --colour-accent(600, var(--active));"></i>600</li>
+<li><i style="background: --colour-accent(700, var(--active));"></i>700</li>
+<li><i style="background: --colour-accent(800, var(--active));"></i>800</li>
+<li><i style="background: --colour-accent(900, var(--active));"></i>900</li>
+<li><i style="background: --colour-accent(1000, var(--active));"></i>1000</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="adjust-hue">
+        <h3>Adjust hue <small>HSL hue rotation in degrees</small></h3>
+        <p><code>--colour-adjust-hue(degrees, var(--active))</code></p>
+        <ol class="scale-steps">
+<li class="is-base"><i style="background: --colour-adjust-hue(0, var(--active));"></i>0°</li>
+<li><i style="background: --colour-adjust-hue(30, var(--active));"></i>30°</li>
+<li><i style="background: --colour-adjust-hue(60, var(--active));"></i>60°</li>
+<li><i style="background: --colour-adjust-hue(90, var(--active));"></i>90°</li>
+<li><i style="background: --colour-adjust-hue(120, var(--active));"></i>120°</li>
+<li><i style="background: --colour-adjust-hue(150, var(--active));"></i>150°</li>
+<li><i style="background: --colour-adjust-hue(180, var(--active));"></i>180°</li>
+<li><i style="background: --colour-adjust-hue(210, var(--active));"></i>210°</li>
+<li><i style="background: --colour-adjust-hue(240, var(--active));"></i>240°</li>
+<li><i style="background: --colour-adjust-hue(270, var(--active));"></i>270°</li>
+<li><i style="background: --colour-adjust-hue(300, var(--active));"></i>300°</li>
+<li><i style="background: --colour-adjust-hue(330, var(--active));"></i>330°</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="tone">
+        <h3>Tone <small>OKLCH lightness</small></h3>
+        <p><code>--colour-tone(lightness, var(--active))</code></p>
+        <ol class="scale-steps">
+<li><i style="background: --colour-tone(10%, var(--active));"></i>10%</li>
+<li><i style="background: --colour-tone(20%, var(--active));"></i>20%</li>
+<li><i style="background: --colour-tone(30%, var(--active));"></i>30%</li>
+<li><i style="background: --colour-tone(40%, var(--active));"></i>40%</li>
+<li><i style="background: --colour-tone(50%, var(--active));"></i>50%</li>
+<li><i style="background: --colour-tone(60%, var(--active));"></i>60%</li>
+<li><i style="background: --colour-tone(70%, var(--active));"></i>70%</li>
+<li><i style="background: --colour-tone(80%, var(--active));"></i>80%</li>
+<li><i style="background: --colour-tone(90%, var(--active));"></i>90%</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="chroma">
+        <h3>Chroma <small>OKLCH colourfulness, 1 is unchanged</small></h3>
+        <p><code>--colour-chroma(multiplier, var(--active))</code></p>
+        <ol class="scale-steps">
+<li><i style="background: --colour-chroma(0, var(--active));"></i>×0</li>
+<li><i style="background: --colour-chroma(0.25, var(--active));"></i>×0.25</li>
+<li><i style="background: --colour-chroma(0.5, var(--active));"></i>×0.5</li>
+<li><i style="background: --colour-chroma(0.75, var(--active));"></i>×0.75</li>
+<li class="is-base"><i style="background: --colour-chroma(1, var(--active));"></i>×1</li>
+<li><i style="background: --colour-chroma(1.25, var(--active));"></i>×1.25</li>
+<li><i style="background: --colour-chroma(1.5, var(--active));"></i>×1.5</li>
+        </ol>
+      </div>
+      <div class="scale" data-fn="mix">
+        <h3>Mix <small>OKLCH, the weight is the second colour's share</small></h3>
+        <fieldset class="mix-picker"><legend class="sr-only">Mix with</legend>
+<label class="mix-option"><input id="mix-pink" type="radio" name="mix" value="pink" checked><i style="background: #e91e63;"></i>pink</label>
+<label class="mix-option"><input id="mix-amber" type="radio" name="mix" value="amber"><i style="background: #ffc107;"></i>amber</label>
+<label class="mix-option"><input id="mix-teal" type="radio" name="mix" value="teal"><i style="background: #009688;"></i>teal</label>
+<label class="mix-option"><input id="mix-deep-orange" type="radio" name="mix" value="deep-orange"><i style="background: #ff5722;"></i>deep-orange</label>
+<label class="mix-option"><input id="mix-white" type="radio" name="mix" value="white"><i style="background: #fff;"></i>white</label>
+<label class="mix-option"><input id="mix-black" type="radio" name="mix" value="black"><i style="background: #000;"></i>black</label>
+        </fieldset>
+        <p><code>--colour-mix(weight, var(--active), var(--mix-with))</code></p>
+        <ol class="scale-steps">
+<li class="is-base"><i style="background: --colour-mix(0%, var(--active), var(--mix-with));"></i>0%</li>
+<li><i style="background: --colour-mix(10%, var(--active), var(--mix-with));"></i>10%</li>
+<li><i style="background: --colour-mix(20%, var(--active), var(--mix-with));"></i>20%</li>
+<li><i style="background: --colour-mix(30%, var(--active), var(--mix-with));"></i>30%</li>
+<li><i style="background: --colour-mix(40%, var(--active), var(--mix-with));"></i>40%</li>
+<li><i style="background: --colour-mix(50%, var(--active), var(--mix-with));"></i>50%</li>
+<li><i style="background: --colour-mix(60%, var(--active), var(--mix-with));"></i>60%</li>
+<li><i style="background: --colour-mix(70%, var(--active), var(--mix-with));"></i>70%</li>
+<li><i style="background: --colour-mix(80%, var(--active), var(--mix-with));"></i>80%</li>
+<li><i style="background: --colour-mix(90%, var(--active), var(--mix-with));"></i>90%</li>
+<li class="is-base"><i style="background: --colour-mix(100%, var(--active), var(--mix-with));"></i>100%</li>
+        </ol>
       </div>
     </div>
     <div class="current">
@@ -85,7 +170,7 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
   background: --colour-tint(85%);
   border-color: --colour-tint(60%);
 }</code></pre>
-      <p class="tags"><span class="tag" style="color: --colour(red);">red</span><span class="tag" style="color: --colour(teal);">teal</span><span class="tag" style="color: --colour(indigo);">indigo</span><span class="tag" style="color: --colour(brown);">brown</span></p>
+      <p class="tags"><span class="tag" style="color: #f44336;">red</span><span class="tag" style="color: #009688;">teal</span><span class="tag" style="color: #3f51b5;">indigo</span><span class="tag" style="color: #795548;">brown</span></p>
     </div>
   </section>
 
@@ -103,56 +188,27 @@ color: --colour-contrast(<span class="active-name"></span>);<span class="contras
       </div>
       <pre class="code compose-code"><code>.card {
   --surface: light-dark(
-    --colour(white),
-    --colour-tone(25%, blue-grey)
+    #fff,
+    --colour-tone(25%, #607d8b)
   );
   background: var(--surface);
   color: --colour-contrast(var(--surface));
 }
 
 .button {
-  --background: --colour-tone(
+  --base: --colour-tone(
     65%,
-    --colour-mix(35%, blue, purple)
+    --colour-mix(35%, #2196f3, #9c27b0)
   );
+  --background: var(--base);
   background: var(--background);
   color: --colour-contrast(var(--background));
   border-color: --colour-darken(15, var(--background));
-  &amp;:hover {
-    background: --colour-darken(
-      10,
-      var(--background)
-    );
+  &amp;:hover, &amp;:focus-visible {
+    --background: --colour-darken(10, var(--base));
   }
 }</code></pre>
     </div>
-  </section>
-
-  <section class="section" id="get-started" aria-labelledby="get-started-title">
-    <h2 id="get-started-title">Get started</h2>
-    <div class="steps">
-      <div><h3>1. Add the stylesheet</h3><p>Copy <a href="https://github.com/Phunky/colour/blob/master/src/colour.css"><code>src/colour.css</code></a> into your project.</p><pre class="code"><code>&lt;link rel="stylesheet" href="colour.css"&gt;</code></pre></div>
-      <div><h3>2. Use the functions</h3><p>Anywhere CSS accepts a colour.</p><pre class="code"><code>.button {
-  background: --colour(blue);
-  color: --colour-contrast(blue);
-}</code></pre></div>
-      <div><h3>3. Check browser support</h3><p>Native CSS functions need Chrome or Edge 139+. This page also ships a build-time compiled version for Safari and Firefox.</p></div>
-    </div>
-    <h3 class="reference-title">Functions</h3>
-    <dl class="reference">
-      <div><dt><code>--colour(c)</code></dt><dd>Palette colour by name; any CSS colour passes through</dd></div>
-      <div><dt><code>--colour-lighten(n, c)</code> <code>--colour-darken(n, c)</code></dt><dd>HSL lightness ± n points</dd></div>
-      <div><dt><code>--colour-saturate(n, c)</code> <code>--colour-desaturate(n, c)</code></dt><dd>HSL saturation ± n points</dd></div>
-      <div><dt><code>--colour-adjust-hue(deg, c)</code></dt><dd>Rotate the hue</dd></div>
-      <div><dt><code>--colour-tint(%, c)</code> <code>--colour-shade(%, c)</code></dt><dd>Mix with white or black</dd></div>
-      <div><dt><code>--colour-tone(%, c)</code></dt><dd>Set OKLCH lightness</dd></div>
-      <div><dt><code>--colour-chroma(×, c)</code></dt><dd>Scale OKLCH chroma</dd></div>
-      <div><dt><code>--colour-mix(%, c1, c2)</code></dt><dd>Mix two colours in OKLCH</dd></div>
-      <div><dt><code>--colour-opacity(α, c)</code> <code>--colour-fade(×, c)</code></dt><dd>Set or multiply alpha</dd></div>
-      <div><dt><code>--colour-accent(level, c)</code></dt><dd>Material-style shade, 50–1000</dd></div>
-      <div><dt><code>--colour-contrast(bg)</code></dt><dd>Black or white text for a background</dd></div>
-    </dl>
-    <p class="reference-note"><code>c</code> is optional and defaults to <code>currentColor</code>, except in <code>--colour-mix()</code> and <code>--colour-contrast()</code>. The <a href="https://github.com/Phunky/colour#readme">README</a> has the full API, browser support and more examples.</p>
   </section>
 </main>
 <footer class="footer"><p>colour began in 2015 as a Sass library by <a href="https://github.com/Phunky">Phunky</a>. <span class="build-note">Native CSS build · <a href="index.html">Compatible build</a></span></p></footer>
