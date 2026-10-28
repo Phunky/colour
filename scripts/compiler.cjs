@@ -8,17 +8,19 @@
  * custom functions.
  *
  * Alongside the CSS it evaluates colours that are fully known at build time
- * (palette names, hex, literal rgb()/hsl(), and library transformations of
- * those, including the OKLCH ones). --colour-contrast() uses that to offer a
- * static black/white fallback, chosen with the WCAG 2.x contrast ratio, for
- * browsers without contrast-color(). Runtime colours (var(), currentColor,
- * other literal colour spaces), results outside the sRGB gamut and near-ties
- * are never guessed.
+ * (hex, literal rgb()/hsl(), optional named colours, and library
+ * transformations of those, including the OKLCH ones). --colour-contrast()
+ * uses that to offer a static black/white fallback, chosen with the WCAG 2.x
+ * contrast ratio, for browsers without contrast-color(). Runtime colours
+ * (var(), currentColor, other literal colour spaces), results outside the
+ * sRGB gamut and near-ties are never guessed.
  *
  * Scope: only the 16 library functions defined in src/colour.css are compiled.
  * It is NOT a general-purpose @function polyfill: any other dashed function
- * throws, and palette names can only be resolved where they appear literally
- * (a var() holding a palette name is passed through as a CSS colour).
+ * throws. Named colours are optional: pass palette CSS (for example
+ * examples/material.css) via createCompiler(source, { paletteSource }).
+ * Unmapped identifiers keep their CSS meaning (so red is CSS red, not a
+ * Material hex). A var() holding a name is passed through untouched.
  */
 
 // Amount type of every (amount, colour = currentColor) function, with the
@@ -40,14 +42,16 @@ const SIGNATURES = {
 };
 const MIX_RANGE = { kind: 'percentage', min: 0, max: 1 };
 
-function readPalette(colourSource) {
-  const fn = colourSource.match(/@function\s+--colour\([^]*?\n\}/);
-  if (!fn) throw Error('Cannot locate --colour() source function');
+// Reads style(--value: name): #hex entries from a --colour() @function.
+// Returns an empty map when the source has no named colours (the core library).
+function readPalette(source) {
   const palette = new Map();
+  if (!source) return palette;
+  const fn = source.match(/@function\s+--colour\([^]*?\n\}/);
+  if (!fn) return palette;
   for (const [, name, hex] of fn[0].matchAll(/style\(--value:\s*([\w-]+)\):\s*(#[\da-fA-F]{3,8});/g)) {
     palette.set(name, hex);
   }
-  if (palette.size !== 21) throw Error(`Expected 21 palette entries, found ${palette.size}`);
   return palette;
 }
 
@@ -246,8 +250,12 @@ function contrastChoice(background) {
   return white > black ? '#fff' : '#000';
 }
 
-function createCompiler(colourSource) {
-  const palette = readPalette(colourSource);
+function createCompiler(colourSource, options = {}) {
+  // Optional named colours come from later --colour() sources; later entries win.
+  const palette = new Map();
+  for (const source of [colourSource, ...[].concat(options.paletteSource || [])]) {
+    for (const [name, hex] of readPalette(source)) palette.set(name, hex);
+  }
   const accent = readAccents(colourSource);
 
   // A colour argument must be one component value: an identifier, a hex colour or a single function.

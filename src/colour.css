@@ -2,55 +2,31 @@
  * colour.css
  * Experimental, pure CSS rewrite of https://github.com/Phunky/colour
  *
+ * A composable colour toolkit: no predefined palette. Define colours as
+ * ordinary CSS colours, custom properties, or an optional --colour()
+ * resolver of your own (see examples/).
+ *
  * API: transformation first, colour last. The colour argument is optional
  * (except for --colour-mix() and --colour-contrast()), defaults to
- * currentColor, and accepts a palette name or any CSS <color>
- * (hex, rgb(), hsl(), oklch(), color-mix(), var(), or another --colour-*() result).
+ * currentColor, and accepts any CSS <color> (hex, rgb(), hsl(), oklch(),
+ * color-mix(), var(), a custom-ident resolved by --colour(), or another
+ * --colour-*() result).
  *
- * The named palette has ONE source of truth: --colour().
- * No global colour custom properties are declared.
- * Every helper resolves its colour through --colour(), so palette names take
- * precedence over CSS named colours with the same name (e.g. red, blue).
+ * Every helper resolves its colour through --colour(). The default
+ * --colour() passes its argument through; load a later --colour() to add
+ * named colours. Helpers never call each other (only --colour()): Chromium
+ * currently rejects a function nested in its own argument chain
+ * (csswg-drafts#13943), so delegation would break compositions such as
+ * --colour-rgba(1, --colour-opacity(.5)).
  *
- * The colour parameter is typed <custom-ident> | <color> so palette names stay
- * identifiers for matching, while every other colour passes through unchanged.
- *
- * Browser requirements: CSS custom @function, CSS if(style()), relative
- * color syntax, color-mix() and contrast-color(). Not supported in all browsers.
- * lighten/darken/saturate/desaturate use HSL percentage points (0–100);
- * tone/chroma/mix work in OKLCH, so lightness is perceptual.
- *
- * Helpers never call each other (only --colour()): Chromium currently rejects
- * a function nested in its own argument chain (csswg-drafts#13943), so
- * delegation would break compositions such as --colour-rgba(1, --colour-opacity(.5)).
+ * Browser requirements: CSS custom @function, relative colour syntax,
+ * color-mix() and contrast-color(). lighten/darken/saturate/desaturate use
+ * HSL percentage points (0–100); tone/chroma/mix work in OKLCH.
  */
 
-/* Original Material Design base palette. No :root variable duplication. */
+/* Pass-through resolver. Override this @function to add named colours. */
 @function --colour(--value type(<custom-ident> | <color>): currentColor) returns <color> {
-  result: if(
-    style(--value: red): #f44336;
-    style(--value: pink): #e91e63;
-    style(--value: purple): #9c27b0;
-    style(--value: deep-purple): #673ab7;
-    style(--value: indigo): #3f51b5;
-    style(--value: blue): #2196f3;
-    style(--value: light-blue): #03a9f4;
-    style(--value: cyan): #00bcd4;
-    style(--value: teal): #009688;
-    style(--value: green): #4caf50;
-    style(--value: light-green): #8bc34a;
-    style(--value: lime): #cddc39;
-    style(--value: yellow): #ffeb3b;
-    style(--value: amber): #ffc107;
-    style(--value: orange): #ff9800;
-    style(--value: deep-orange): #ff5722;
-    style(--value: brown): #795548;
-    style(--value: grey): #9e9e9e;
-    style(--value: blue-grey): #607d8b;
-    style(--value: black): #000;
-    style(--value: white): #fff;
-    else: var(--value)
-  );
+  result: var(--value);
 }
 
 @function --colour-lighten(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {

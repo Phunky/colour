@@ -1,43 +1,78 @@
 # colour
 
-> **11 years later, we can finally do this without Sass!**
+> **Define colours however you like. Manipulate them with CSS.**
 
-In 2015, `colour` was a Sass library for named colours. It is now a set of native CSS functions: no Sass, no JavaScript. This is a proof of concept.
+In 2015, `colour` was a Sass library for named colours. It is now a set of native CSS functions: no Sass, no JavaScript, and no built-in palette. This is a proof of concept.
 
 **[Demo](https://phunky.github.io/colour/)** · [Native CSS demo](https://phunky.github.io/colour/index-native.html)
 
-```css
-.button {
-  --base: --colour-tone(65%, --colour-mix(35%, blue, purple));
-  --background: var(--base);
-  background: var(--background);
-  color: --colour-contrast(var(--background));
-  border-color: --colour-darken(15, var(--background));
-  &:hover, &:focus-visible {
-    --background: --colour-darken(10, var(--base));
-  }
-}
-```
+## Quick start
 
-## Usage
-
-Copy [`src/colour.css`](./src/colour.css) into your project:
+Copy [`src/colour.css`](./src/colour.css) into your project. No build step is required in browsers that support CSS custom functions (Chrome/Edge 139+).
 
 ```html
 <link rel="stylesheet" href="colour.css">
 ```
 
-It needs CSS custom functions (`@function`), currently Chrome/Edge 139+. For other browsers, see [Compatible build](#compatible-build).
+## Using colours
 
-## API
+Three interchangeable approaches. Mix them freely, including inside nested calls.
+
+### Standard CSS colours
+
+```css
+background: --colour-darken(10, #6750a4);
+background: --colour-lighten(20, red);
+background: --colour-tone(65%, oklch(50% 0.2 250));
+```
+
+### CSS custom properties
+
+```css
+:root {
+  --primary: #6750a4;
+  --secondary: #03dac6;
+}
+.button {
+  background: --colour-darken(10, var(--primary));
+  border-color: --colour-tint(30%, var(--secondary));
+}
+```
+
+### Optional named colours
+
+Define your own `--colour()` after the library. Later definitions win:
+
+```css
+@function --colour(
+  --value type(<custom-ident> | <color>): currentColor
+) returns <color> {
+  result: if(
+    style(--value: primary): #6750a4;
+    style(--value: success): #22c55e;
+    style(--value: danger): #ef4444;
+    else: var(--value)
+  );
+}
+.button {
+  background: --colour-darken(10, primary);
+}
+.alert {
+  background: --colour-tint(85%, danger);
+}
+```
+
+CSS cannot turn `primary` into `var(--primary)` automatically. Named colours only exist if you define them in `--colour()`.
+
+## Function reference
 
 - **Amount first, colour last.**
 - **The colour defaults to `currentColor`**, except in `--colour-mix()` and `--colour-contrast()`.
-- **Any CSS colour works:** a palette name, hex, `rgb()`, `oklch()`, `var()`, `light-dark()`, or another function's result.
+- **Any CSS colour works**, or a name resolved by your `--colour()`.
 
 | Function | Does |
 | --- | --- |
-| `--colour(c)` | Palette lookup; other colours pass through |
+| `--colour(c)` | Resolves a colour (pass-through by default) |
 | `--colour-lighten(n, c)` / `--colour-darken(n, c)` | HSL lightness ± n points |
 | `--colour-saturate(n, c)` / `--colour-desaturate(n, c)` | HSL saturation ± n points |
 | `--colour-adjust-hue(deg, c)` | Rotate hue (a number, no `deg`) |
@@ -50,46 +85,75 @@ It needs CSS custom functions (`@function`), currently Chrome/Edge 139+. For oth
 | `--colour-accent(level, c)` | Shade levels 50–1000 (500 = base) |
 | `--colour-contrast(bg)` | Black or white text for `bg`, via `contrast-color()` |
 
-Palette: `red`, `pink`, `purple`, `deep-purple`, `indigo`, `blue`, `light-blue`, `cyan`, `teal`, `green`, `light-green`, `lime`, `yellow`, `amber`, `orange`, `deep-orange`, `brown`, `grey`, `blue-grey`, `black`, `white`. These names override CSS named colours: `--colour(red)` is `#f44336`.
+## Composition
+
+Every function returns a colour and accepts one:
 
 ```css
-.tag {
-  color: --colour(purple);
-  background: --colour-tint(85%);   /* currentColor */
-  border-color: --colour-tint(60%);
-}
-
-.card {
-  --surface: light-dark(--colour(white), --colour-tone(25%, blue-grey));
-  background: var(--surface);
-  color: --colour-contrast(var(--surface));
+.button {
+  --base: --colour-tone(
+    65%,
+    --colour-mix(35%, var(--primary), --colour(secondary))
+  );
+  --background: var(--base);
+  background: var(--background);
+  color: --colour-contrast(var(--background));
+  border-color: --colour-darken(15, var(--background));
+  &:hover, &:focus-visible {
+    --background: --colour-darken(10, var(--base));
+  }
 }
 ```
 
 Notes:
 
-- **HSL vs OKLCH.** The lighten, darken, saturate and accent functions keep the Sass behaviour (HSL). `tone`, `chroma` and `mix` are perceptual (OKLCH). Browsers clip out-of-gamut OKLCH, so `--colour-tone(100%, blue)` isn't white; lower the chroma too.
+- **HSL vs OKLCH.** Lighten, darken, saturate and accent keep the Sass HSL behaviour. Tone, chroma and mix are perceptual (OKLCH). Browsers clip out-of-gamut OKLCH.
 - **Contrast** picks black or white only, ignores alpha, and only sees the colour you pass in.
 - **Chromium rejects a function nested in itself**, such as `--colour-lighten(10, --colour-lighten(10, red))` ([w3c/csswg-drafts#13943](https://github.com/w3c/csswg-drafts/issues/13943)). Nesting different functions is fine.
 
-### Migrating from the earlier CSS API
+## Optional palettes
 
-The arguments were swapped: `--colour-lighten(blue, 10)` is now `--colour-lighten(10, blue)`. Drop the colour to use `currentColor`. The Sass API in `_colour.scss` is unchanged.
+Neither example is required. Load one after `colour.css` if you want named colours:
 
-## Compatible build
+| File | Purpose |
+| --- | --- |
+| [`examples/named.css`](./examples/named.css) | Small semantic palette (`primary`, `success`, `danger`, …) |
+| [`examples/material.css`](./examples/material.css) | The original 21 Material Design colours |
 
-[`scripts/compiler.cjs`](./scripts/compiler.cjs) compiles the function calls in the demo's CSS into plain relative-colour and `color-mix()` CSS at build time. This is for Safari 18+, Firefox 133+ and Chromium 131+. It isn't a general `@function` polyfill:
+```html
+<link rel="stylesheet" href="colour.css">
+<link rel="stylesheet" href="examples/named.css">
+```
 
-- Palette names must appear literally.
-- `--colour-contrast()` compiles to `contrast-color()` inside `@supports`, with a static black/white fallback when the background is known at build time. Otherwise, declare your own fallback first.
+Or write your own `--colour()`. Standard CSS named colours (`red`, `blue`, …) keep their standard values unless you override them.
+
+## Browser support
+
+Native CSS custom functions need Chrome or Edge 139+ (and `--colour-contrast()` needs `contrast-color()`). Shipping Safari and Firefox do not run the native `@function` API yet.
+
+For those browsers, [`scripts/compiler.cjs`](./scripts/compiler.cjs) can compile `--colour*()` calls into relative-colour and `color-mix()` CSS at build time. Pass optional named colours explicitly:
+
+```js
+const { createCompiler } = require('./scripts/compiler.cjs');
+const { compileValue } = createCompiler(
+  fs.readFileSync('src/colour.css', 'utf8'),
+  { paletteSource: fs.readFileSync('examples/material.css', 'utf8') }
+);
+```
+
+Without a `paletteSource`, unmapped identifiers keep ordinary CSS meaning. The compiler is not a general `@function` polyfill.
 
 ```sh
 npm install
-npm run build   # writes dist/: index.html (compatible), index-native.html, CSS and standalone files
+npm run build   # writes dist/: compatible demo, native demo, CSS and standalone files
 ```
 
-Pushing to `master` builds and deploys `dist/` to GitHub Pages via [`.github/workflows/pages.yml`](./.github/workflows/pages.yml).
+Pushing to `master` builds and deploys `dist/` via [`.github/workflows/pages.yml`](./.github/workflows/pages.yml).
+
+## Migration
+
+The Material palette is no longer built into the core library. Include [`examples/material.css`](./examples/material.css) after `colour.css`, or switch to hex / `var()` / your own names. `--colour(red)` is now CSS `red` (`#ff0000`) unless you override it. The Sass API in `_colour.scss` is unchanged.
 
 ## The original
 
-*"An opinionated way to manage and use colours within your SASS workflow."* `_colour.scss` is still here, unchanged. See [LICENSE](LICENSE).
+*"An opinionated way to manage and use colours within your SASS workflow."* See [LICENSE](LICENSE).
