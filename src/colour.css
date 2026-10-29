@@ -1,0 +1,115 @@
+/*
+ * colour.css
+ * https://github.com/Phunky/colour
+ *
+ * A composable colour toolkit: no predefined palette. Define colours as
+ * ordinary CSS colours, custom properties, or an optional --colour()
+ * resolver of your own (see examples/).
+ *
+ * API: transformation first, colour last. The colour argument is optional
+ * (except for --colour-mix() and --colour-contrast()), defaults to
+ * currentColor, and accepts any CSS <color> (hex, rgb(), hsl(), oklch(),
+ * color-mix(), var(), a custom-ident resolved by --colour(), or another
+ * --colour-*() result).
+ *
+ * Every helper resolves its colour through --colour(). The default
+ * --colour() passes its argument through; load a later --colour() to add
+ * named colours. Helpers never call each other (only --colour()): Chromium
+ * currently rejects a function nested in its own argument chain
+ * (csswg-drafts#13943), so delegation would break compositions such as
+ * --colour-rgba(1, --colour-opacity(.5)).
+ *
+ * Browser requirements: CSS custom @function, relative colour syntax,
+ * color-mix() and contrast-color(). lighten/darken/saturate/desaturate use
+ * HSL percentage points (0–100); tone/chroma/mix work in OKLCH.
+ */
+
+/* Pass-through resolver. Override this @function to add named colours. */
+@function --colour(--value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: var(--value);
+}
+
+@function --colour-lighten(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h s clamp(0, calc(l + var(--points)), 100) / alpha);
+}
+
+@function --colour-darken(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h s clamp(0, calc(l - var(--points)), 100) / alpha);
+}
+
+@function --colour-saturate(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h clamp(0, calc(s + var(--points)), 100) l / alpha);
+}
+
+@function --colour-desaturate(--points <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h clamp(0, calc(s - var(--points)), 100) l / alpha);
+}
+
+@function --colour-adjust-hue(--degrees <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) calc(h + var(--degrees)) s l / alpha);
+}
+
+/* tint/shade use sRGB interpolation rather than HSL lightness adjustment. */
+@function --colour-tint(--weight <percentage>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: color-mix(in srgb, --colour(var(--value)), white var(--weight));
+}
+
+@function --colour-shade(--weight <percentage>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: color-mix(in srgb, --colour(var(--value)), black var(--weight));
+}
+
+@function --colour-rgba(--alpha <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: rgb(from --colour(var(--value)) r g b / var(--alpha));
+}
+
+/* Alias of --colour-rgba(); see the header for why it does not delegate. */
+@function --colour-opacity(--alpha <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: rgb(from --colour(var(--value)) r g b / var(--alpha));
+}
+
+/* Multiplies the existing alpha (0.5 of 0.6 is 0.3); --colour-opacity() replaces it. */
+@function --colour-fade(--multiplier <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: rgb(from --colour(var(--value)) r g b / clamp(0, calc(alpha * var(--multiplier)), 1));
+}
+
+/* Perceptual adjustments in OKLCH. Results can leave the sRGB gamut; the
+   browser maps them to the display like any other oklch() colour. */
+@function --colour-tone(--lightness <percentage>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: oklch(from --colour(var(--value)) var(--lightness) c h / alpha);
+}
+
+@function --colour-chroma(--multiplier <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: oklch(from --colour(var(--value)) l max(0, c * var(--multiplier)) h / alpha);
+}
+
+/* --weight is the second colour's share: 0% is the first colour, 100% the second. */
+@function --colour-mix(--weight <percentage>, --first type(<custom-ident> | <color>), --second type(<custom-ident> | <color>)) returns <color> {
+  result: color-mix(in oklch, --colour(var(--first)), --colour(var(--second)) var(--weight));
+}
+
+/* Black or white, whichever contrasts more with the background, chosen by the
+   browser's contrast-color(). The background is required (no currentColor
+   default) and its alpha is ignored, so translucent backgrounds need testing
+   against whatever is rendered beneath them. */
+@function --colour-contrast(--background type(<custom-ident> | <color>)) returns <color> {
+  result: contrast-color(--colour(var(--background)));
+}
+
+/* HSL point shifts for Material-style accent weights.
+   500 is the base colour, 1000 is an extra-dark shade. */
+@function --colour-accent(--level <integer>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  --offset: if(
+    style(--level: 50): 36;
+    style(--level: 100): 34;
+    style(--level: 200): 31.5;
+    style(--level: 300): 26;
+    style(--level: 400): 12;
+    style(--level: 500): 0;
+    style(--level: 600): -16;
+    style(--level: 700): -24;
+    style(--level: 800): -36;
+    style(--level: 900): -49;
+    style(--level: 1000): -62
+  );
+  result: hsl(from --colour(var(--value)) h s clamp(0, calc(l + var(--offset)), 100) / alpha);
+}

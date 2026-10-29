@@ -1,0 +1,12 @@
+{
+  "name": "colour-native-css",
+  "private": true,
+  "version": "3.0.0",
+  "description": "A composable colour toolkit using native CSS custom functions, with a Safari-compatible build",
+  "scripts": {
+    "build": "node scripts/build.cjs"
+  },
+  "devDependencies": {
+    "postcss": "^8.5.6"
+  }
+}
