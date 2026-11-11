@@ -113,3 +113,12 @@
   );
   result: hsl(from --colour(var(--value)) h s clamp(0, calc(l + var(--offset)), 100) / alpha);
 }
+
+/* Golden-angle steps preserve saturation, lightness and alpha. */
+@function --colour-golden(--step <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) calc(h + 137.507764 * var(--step)) s l / alpha);
+}
+
+@function --colour-scale-saturation(--factor <number>, --value type(<custom-ident> | <color>): currentColor) returns <color> {
+  result: hsl(from --colour(var(--value)) h clamp(0, calc(s * var(--factor)), 100) l / alpha);
+}
