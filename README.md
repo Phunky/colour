@@ -77,6 +77,8 @@ CSS cannot turn `primary` into `var(--primary)` automatically. Named colours onl
 | `--colour-lighten(n, c)` / `--colour-darken(n, c)` | HSL lightness ± n points |
 | `--colour-saturate(n, c)` / `--colour-desaturate(n, c)` | HSL saturation ± n points |
 | `--colour-adjust-hue(deg, c)` | Rotate hue (a number, no `deg`) |
+| `--colour-golden(step, c)` | Rotate HSL hue by 137.507764° × step |
+| `--colour-scale-saturation(factor, c)` | Multiply HSL saturation, clamped to 0–100 |
 | `--colour-tint(%, c)` / `--colour-shade(%, c)` | Mix with white / black |
 | `--colour-tone(%, c)` | Set OKLCH lightness |
 | `--colour-chroma(×, c)` | Multiply OKLCH chroma (0 = grey) |
@@ -113,6 +115,46 @@ Notes:
 - **HSL vs OKLCH.** Lighten, darken, saturate and accent adjust HSL. Tone, chroma and mix are perceptual (OKLCH). Browsers clip out-of-gamut OKLCH.
 - **Contrast** picks black or white only, ignores alpha, and only sees the colour you pass in.
 - **Chromium rejects a function nested in itself**, such as `--colour-lighten(10, --colour-lighten(10, red))` ([w3c/csswg-drafts#13943](https://github.com/w3c/csswg-drafts/issues/13943)). Nesting different functions is fine.
+
+## Golden-ratio palettes
+`--colour-golden(step, colour = currentColor)` rotates HSL hue by
+`137.507764° × step`, preserving saturation, lightness and alpha. Step is a
+number: zero preserves hue, negative steps rotate backwards, and fractional
+steps are supported. Hue wraps naturally.
+
+`--colour-scale-saturation(factor, colour = currentColor)` multiplies HSL
+saturation and clamps it to 0–100. A factor of 1 preserves saturation, 0
+removes it, and .5 halves it. Negative factors clamp to zero. This differs
+from `--colour-saturate()`, which adds percentage points.
+
+Both accept CSS colours, `var()` values, optional names resolved by your
+`--colour()` function, and nested colour functions. No configuration, build
+step or JavaScript is needed for native CSS use.
+
+```css
+.palette {
+  --base: #6750a4;
+  --primary: --colour-golden(0, var(--base));
+  --secondary: --colour-golden(1, var(--base));
+  --tertiary: --colour-golden(2, var(--base));
+  --muted: --colour-scale-saturation(.25, var(--primary));
+  background: --colour-tint(85%, var(--secondary));
+  border-color: --colour-darken(10, var(--primary));
+}
+.badge {
+  background: --colour-scale-saturation(.5, --colour-golden(1));
+}
+```
+
+Golden-ratio hue rotation creates mathematically spaced colours; it does **not**
+guarantee accessible contrast. Check actual text/background combinations,
+including transparency. The compatibility compiler supports both helpers and
+nested expressions using its existing build-time workflow.
+
+The demo includes a Golden Ratio Palette Generator with a colour picker, CSS
+colour input, computed swatch values and copy controls. The CSS example uses
+the helpers directly, so copied declarations stay linked to the base colour. Its small script handles only
+interaction and copying; CSS generates the palette in both builds.
 
 ## Optional palettes
 
@@ -166,43 +208,3 @@ If you used an older build where Material names were baked into the core library
 ## History
 
 An earlier Sass version lived here in 2015. See the [final Sass commit](https://github.com/Phunky/colour/tree/baf463e1caf8d6b90d1d58fc31eff56b12739d72) if you need it. See [LICENSE](LICENSE).
-
-### Golden-ratio palettes
-
-`--colour-golden(step, colour = currentColor)` rotates HSL hue by
-`137.507764° × step`, preserving saturation, lightness and alpha. Step is a
-number: zero preserves hue, negative steps rotate backwards, and fractional
-steps are supported. Hue wraps naturally.
-
-`--colour-scale-saturation(factor, colour = currentColor)` multiplies HSL
-saturation and clamps it to 0–100. A factor of 1 preserves saturation, 0
-removes it, and .5 halves it. Negative factors clamp to zero. This differs
-from `--colour-saturate()`, which adds percentage points.
-
-Both accept CSS colours, `var()` values, optional names resolved by your
-`--colour()` function, and nested colour functions. No configuration, build
-step or JavaScript is needed for native CSS use.
-
-```css
-.palette {
-  --base: #6750a4;
-  --primary: --colour-golden(0, var(--base));
-  --secondary: --colour-golden(1, var(--base));
-  --tertiary: --colour-golden(2, var(--base));
-  --muted: --colour-scale-saturation(.25, var(--primary));
-  background: --colour-tint(85%, var(--secondary));
-  border-color: --colour-darken(10, var(--primary));
-}
-.badge {
-  background: --colour-scale-saturation(.5, --colour-golden(1));
-}
-```
-
-Golden-ratio hue rotation creates mathematically spaced colours; it does **not**
-guarantee accessible contrast. Check actual text/background combinations,
-including transparency. The compatibility compiler supports both helpers and
-nested expressions using its existing build-time workflow.
-
-The demo includes a Golden Ratio Palette Generator with a colour picker, CSS
-colour input, computed values and copy controls. Its small script handles only
-interaction and copying; CSS generates the palette in both builds.
