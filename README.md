@@ -117,6 +117,7 @@ Notes:
 - **Chromium rejects a function nested in itself**, such as `--colour-lighten(10, --colour-lighten(10, red))` ([w3c/csswg-drafts#13943](https://github.com/w3c/csswg-drafts/issues/13943)). Nesting different functions is fine.
 
 ## Golden-ratio palettes
+
 `--colour-golden(step, colour = currentColor)` rotates HSL hue by
 `137.507764° × step`, preserving saturation, lightness and alpha. Step is a
 number: zero preserves hue, negative steps rotate backwards, and fractional
@@ -151,10 +152,9 @@ guarantee accessible contrast. Check actual text/background combinations,
 including transparency. The compatibility compiler supports both helpers and
 nested expressions using its existing build-time workflow.
 
-The demo includes a Golden Ratio Palette Generator with a colour picker, CSS
-colour input, computed swatch values and copy controls. The CSS example uses
-the helpers directly, so copied declarations stay linked to the base colour. Its small script handles only
-interaction and copying; CSS generates the palette in both builds.
+The playground shows both functions as labelled swatch scales using the same
+sample colour selection as the other helpers. Composition examples show how to
+mute or tint a golden-angle hue. The demo runs entirely in CSS, with no JavaScript.
 
 ## Optional palettes
 
