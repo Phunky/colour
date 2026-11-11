@@ -35,7 +35,7 @@
 <label class="palette-option" style="--swatch: #9c27b0;" title="purple"><input id="tone-purple" type="radio" name="palette" value="purple"><span class="sr-only">purple</span></label>
 <label class="palette-option" style="--swatch: #673ab7;" title="deep-purple"><input id="tone-deep-purple" type="radio" name="palette" value="deep-purple"><span class="sr-only">deep-purple</span></label>
 <label class="palette-option" style="--swatch: #3f51b5;" title="indigo"><input id="tone-indigo" type="radio" name="palette" value="indigo"><span class="sr-only">indigo</span></label>
-<label class="palette-option" style="--swatch: #2196f3;" title="blue"><input id="tone-blue" type="radio" name="palette" value="blue" checked><span class="sr-only">blue</span></label>
+<label class="palette-option" style="--swatch: #2196f3;" title="blue"><input id="tone-blue" type="radio" name="palette" value="blue"><span class="sr-only">blue</span></label>
 <label class="palette-option" style="--swatch: #03a9f4;" title="light-blue"><input id="tone-light-blue" type="radio" name="palette" value="light-blue"><span class="sr-only">light-blue</span></label>
 <label class="palette-option" style="--swatch: #00bcd4;" title="cyan"><input id="tone-cyan" type="radio" name="palette" value="cyan"><span class="sr-only">cyan</span></label>
 <label class="palette-option" style="--swatch: #009688;" title="teal"><input id="tone-teal" type="radio" name="palette" value="teal"><span class="sr-only">teal</span></label>
@@ -44,7 +44,7 @@
 <label class="palette-option" style="--swatch: #cddc39;" title="lime"><input id="tone-lime" type="radio" name="palette" value="lime"><span class="sr-only">lime</span></label>
 <label class="palette-option" style="--swatch: #ffeb3b;" title="yellow"><input id="tone-yellow" type="radio" name="palette" value="yellow"><span class="sr-only">yellow</span></label>
 <label class="palette-option" style="--swatch: #ffc107;" title="amber"><input id="tone-amber" type="radio" name="palette" value="amber"><span class="sr-only">amber</span></label>
-<label class="palette-option" style="--swatch: #ff9800;" title="orange"><input id="tone-orange" type="radio" name="palette" value="orange"><span class="sr-only">orange</span></label>
+<label class="palette-option" style="--swatch: #ffa500;" title="orange"><input id="tone-orange" type="radio" name="palette" value="orange" checked><span class="sr-only">orange</span></label>
 <label class="palette-option" style="--swatch: #ff5722;" title="deep-orange"><input id="tone-deep-orange" type="radio" name="palette" value="deep-orange"><span class="sr-only">deep-orange</span></label>
 <label class="palette-option" style="--swatch: #795548;" title="brown"><input id="tone-brown" type="radio" name="palette" value="brown"><span class="sr-only">brown</span></label>
 <label class="palette-option" style="--swatch: #9e9e9e;" title="grey"><input id="tone-grey" type="radio" name="palette" value="grey"><span class="sr-only">grey</span></label>
@@ -76,8 +76,8 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
           <figure class="tile" data-fn="rgba"><i></i><figcaption><code>--colour-rgba(0.25, var(--active))</code></figcaption></figure>
           <figure class="tile" data-fn="fade"><i></i><figcaption><code>--colour-fade(0.5, --colour-opacity(0.6, var(--active)))</code></figcaption></figure>
         </div></div>
-        <div class="variation"><h3>Golden hue composition <small>mute or tint a rotated colour</small></h3><div class="tiles">
-          <figure class="tile" data-fn="golden-muted"><i></i><figcaption><code>--colour-scale-saturation(.25, --colour-golden(1, var(--active)))</code></figcaption></figure>
+        <div class="variation"><h3>Palette composition <small>support the base and tint the secondary</small></h3><div class="tiles">
+          <figure class="tile" data-fn="supporting"><i></i><figcaption><code>--colour-scale-saturation(0.4, var(--active))</code></figcaption></figure>
           <figure class="tile" data-fn="golden-tint"><i></i><figcaption><code>--colour-tint(85%, --colour-golden(1, var(--active)))</code></figcaption></figure>
         </div></div>
       </div>
@@ -121,7 +121,7 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
       <div class="scale" data-fn="golden">
         <h3>Golden hue <small>HSL hue rotation by the golden angle</small></h3>
         <p><code>--colour-golden(step, var(--active))</code></p>
-        <p>Each step rotates hue by 137.507764°. Zero keeps the base hue; negative steps rotate backwards. Mathematically spaced hues do not guarantee accessible contrast.</p>
+        <p>Rotates hue by approximately 137.5° per step, preserving saturation and lightness. Use steps here; --colour-adjust-hue() takes degrees directly. Zero keeps the hue; negative steps rotate backwards.</p>
         <ol class="scale-steps">
 <li><i style="background: --colour-golden(-1, var(--active));"></i>-1</li>
 <li class="is-base"><i style="background: --colour-golden(0, var(--active));"></i>0</li>
@@ -135,10 +135,10 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
       <div class="scale" data-fn="scale-saturation">
         <h3>Scale saturation <small>HSL saturation, 1 is unchanged</small></h3>
         <p><code>--colour-scale-saturation(factor, var(--active))</code></p>
-        <p>Multiply saturation, clamped to 0–100: 0 removes it, .5 halves it, and 2 doubles it. Unlike saturate/desaturate, this multiplies rather than adds percentage points.</p>
+        <p>Multiplies the original saturation: 0.4 turns 100% into 40%, or 50% into 20%. By comparison, --colour-desaturate(40) subtracts 40 percentage points. Results clamp to 0–100%.</p>
         <ol class="scale-steps">
 <li><i style="background: --colour-scale-saturation(0, var(--active));"></i>×0</li>
-<li><i style="background: --colour-scale-saturation(0.25, var(--active));"></i>×0.25</li>
+<li><i style="background: --colour-scale-saturation(0.4, var(--active));"></i>×0.4</li>
 <li><i style="background: --colour-scale-saturation(0.5, var(--active));"></i>×0.5</li>
 <li><i style="background: --colour-scale-saturation(0.75, var(--active));"></i>×0.75</li>
 <li class="is-base"><i style="background: --colour-scale-saturation(1, var(--active));"></i>×1</li>
@@ -212,7 +212,7 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
 
   <section class="section" id="named" aria-labelledby="named-title">
     <h2 id="named-title">Named colours</h2>
-    <p class="section-lead">Optional. Define your own <code>--colour()</code> after the library (this page mirrors <code>examples/named.css</code>). Names then work in any helper.</p>
+    <p class="section-lead">Optional. Define your own <code>--colour()</code> after the library (this page mirrors <code>examples/named.css</code>). Names then work in any helper. <code>var(--primary)</code> reads a CSS custom property; the identifier <code>primary</code> is resolved by <code>--colour()</code>. These named samples stay fixed while the Playground selection changes.</p>
     <div class="named">
       <pre class="code"><code>@function --colour(
   --value type(&lt;custom-ident&gt; | &lt;color&gt;): currentColor
@@ -227,7 +227,10 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
 }
 
 .swatch { background: --colour(primary); }
-.alert  { background: --colour-tint(85%, danger); }</code></pre>
+.alert  { background: --colour-tint(85%, danger); }
+/* Helpers resolve names too: --colour() is optional here. */
+.related { background: --colour-golden(1, --colour(primary)); }
+.support { background: --colour-scale-saturation(0.4, primary); }</code></pre>
       <div class="named-swatches">
         <figure class="named-swatch" data-fn="primary"><i></i><figcaption><code>--colour(primary)</code></figcaption></figure>
         <figure class="named-swatch" data-fn="secondary"><i></i><figcaption><code>--colour(secondary)</code></figcaption></figure>
@@ -235,13 +238,16 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
         <figure class="named-swatch" data-fn="danger"><i></i><figcaption><code>--colour-darken(12, danger)</code></figcaption></figure>
         <figure class="named-swatch" data-fn="tint-danger"><i></i><figcaption><code>--colour-tint(85%, danger)</code></figcaption></figure>
         <figure class="named-swatch" data-fn="mix-named"><i></i><figcaption><code>--colour-mix(40%, primary, secondary)</code></figcaption></figure>
+        <figure class="named-swatch" data-fn="golden-named"><i></i><figcaption><code>--colour-golden(1, --colour(primary))</code></figcaption></figure>
+        <figure class="named-swatch" data-fn="supporting-named"><i></i><figcaption><code>--colour-scale-saturation(0.4, primary)</code></figcaption></figure>
       </div>
     </div>
   </section>
 
   <section class="section" id="composition" aria-labelledby="composition-title">
     <h2 id="composition-title">Composition</h2>
-    <p class="section-lead">Every function returns a colour and accepts one, so a whole component can come from a single expression.</p>
+    <p class="section-lead">Build a three-colour palette from one starting colour. Start with orange (#FFA500), or <a href="#playground">choose another Playground colour</a> to update the whole example.</p>
+    <p class="section-lead">With φ ≈ 1.618, the golden angle is 360 × (1 − 1/φ) ≈ 137.507764°. Keep the base as Primary, rotate it once for Secondary, and return to the original base for Supporting at 0.4 times its saturation.</p>
     <div class="compose">
       <div class="stage">
         <fieldset class="scheme"><legend class="sr-only">Colour scheme</legend>
@@ -249,29 +255,53 @@ color: --colour-contrast(var(--active));<span class="contrast-result"> /* <span 
 <label class="scheme-option"><input id="scheme-light" type="radio" name="scheme" value="light">Light</label>
 <label class="scheme-option"><input id="scheme-dark" type="radio" name="scheme" value="dark">Dark</label>
         </fieldset>
-        <article class="card"><h3>Upgrade your plan</h3><p>Background, text, border and hover colours all derive from the CSS shown here.</p><button class="button" type="button">Upgrade</button></article>
+        <div class="tiles composition-palette">
+          <figure class="tile"><i class="palette-primary"></i><figcaption>Primary<br><code>var(--base)</code></figcaption></figure>
+          <figure class="tile"><i class="palette-secondary"></i><figcaption>Secondary<br><code>--colour-golden(1, var(--base))</code></figcaption></figure>
+          <figure class="tile"><i class="palette-supporting"></i><figcaption>Supporting<br><code>--colour-scale-saturation(0.4, var(--base))</code></figcaption></figure>
+        </div>
+        <article class="card"><span class="card-accent">Creative workshop</span><h3>Make room for your next idea</h3><p>A primary accent, a secondary action, and supporting borders and surfaces — all from one colour.</p><button class="button" type="button">Explore the workshop</button></article>
+        <p>The swatches show the unadjusted palette. Hue rotation preserves saturation and lightness: the reel’s darker teal also reduces lightness. Here, <code>--colour-tone()</code> sets the button’s secondary colour to 35% OKLCH lightness in light mode and 80% in dark mode.</p>
+        <p><code>--colour-contrast()</code> chooses black or white text. Golden-angle spacing does not guarantee WCAG compliance; check the final text, backgrounds and UI states.</p>
       </div>
-      <pre class="code compose-code"><code>.card {
+      <pre class="code compose-code"><code>.stage {
+  --base: var(--active); /* Playground selection */
+  --primary: var(--base);
+  --secondary: --colour-golden(1, var(--base));
+  --supporting: --colour-scale-saturation(0.4, var(--base));
+  background: light-dark(
+    --colour-tint(85%, var(--supporting)),
+    --colour-shade(90%, var(--supporting))
+  );
+  color: light-dark(#18212b, #e8edf2);
+}
+.palette-primary { background: var(--primary); }
+.palette-secondary { background: var(--secondary); }
+.palette-supporting { background: var(--supporting); }
+.card {
   --surface: light-dark(
-    #fff,
-    --colour-tone(25%, #607d8b)
+    --colour-tint(95%, var(--supporting)),
+    --colour-shade(80%, var(--supporting))
   );
   background: var(--surface);
+  color: light-dark(#000, #fff);
   color: --colour-contrast(var(--surface));
+  border: 2px solid var(--supporting);
 }
-
+.card-accent {
+  background: var(--primary);
+  color: var(--on-active); /* Playground fallback */
+  color: --colour-contrast(var(--primary));
+}
 .button {
-  --base: --colour-tone(
-    65%,
-    --colour-mix(35%, #2196f3, #9c27b0)
+  --background: light-dark(
+    --colour-tone(35%, var(--secondary)),
+    --colour-tone(80%, var(--secondary))
   );
-  --background: var(--base);
   background: var(--background);
+  color: light-dark(#fff, #000);
   color: --colour-contrast(var(--background));
-  border-color: --colour-darken(15, var(--background));
-  &amp;:hover, &amp;:focus-visible {
-    --background: --colour-darken(10, var(--base));
-  }
+  border-color: var(--supporting);
 }</code></pre>
     </div>
   </section>

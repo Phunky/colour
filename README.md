@@ -61,9 +61,15 @@ Define your own `--colour()` after the library. Later definitions win:
 .alert {
   background: --colour-tint(85%, danger);
 }
+.related {
+  background: --colour-golden(1, --colour(primary));
+}
+.support {
+  background: --colour-scale-saturation(0.4, primary);
+}
 ```
 
-CSS cannot turn `primary` into `var(--primary)` automatically. Named colours only exist if you define them in `--colour()`.
+`var(--primary)` reads a custom property; `primary` is a named identifier resolved by your `--colour()`. Helpers call that resolver themselves, so `--colour-golden(1, primary)` also works. Named colours only exist if you define them; they are not automatically linked to custom properties.
 
 ## Function reference
 
@@ -90,25 +96,45 @@ CSS cannot turn `primary` into `var(--primary)` automatically. Named colours onl
 
 ## Composition
 
-Every function returns a colour and accepts one. Ordinary CSS colours and custom properties need no extra setup:
+Generate a three-colour palette from one base: keep the primary, rotate once
+for the secondary, then reduce the **original base’s** saturation for a supporting
+colour. The golden angle is `360 × (1 − 1/φ) ≈ 137.507764°`, where φ ≈ 1.618.
 
 ```css
+.palette {
+  --base: #FFA500;
+  --primary: var(--base);
+  --secondary: --colour-golden(1, var(--base));
+  --supporting: --colour-scale-saturation(0.4, var(--base));
+}
+.card {
+  --surface: --colour-tint(95%, var(--supporting));
+  background: var(--surface);
+  border: 2px solid var(--supporting);
+  color: --colour-contrast(var(--surface));
+}
 .button {
-  --base: --colour-tone(
-    65%,
-    --colour-mix(35%, #2196f3, #9c27b0)
-  );
-  --background: var(--base);
+  --background: --colour-tone(35%, var(--secondary));
   background: var(--background);
+  border: 2px solid var(--supporting);
   color: --colour-contrast(var(--background));
-  border-color: --colour-darken(15, var(--background));
-  &:hover, &:focus-visible {
-    --background: --colour-darken(10, var(--base));
-  }
 }
 ```
 
-With a custom `--colour()` loaded (see [Optional palettes](#optional-palettes)), the same pattern can use names such as `--colour-mix(35%, primary, secondary)`.
+Place the card and button inside `.palette` so they inherit its colours. The
+[demo](https://phunky.github.io/colour/#composition) uses the Playground’s selected
+colour as its base, shows all three swatches, and adapts the component to light
+and dark modes. Its primary colour provides the accent, while supporting tints
+and shades provide surfaces and borders.
+
+Hue rotation preserves saturation and lightness. The darker teal in the reel
+also has reduced lightness: rotation alone will not reproduce it. The example
+uses `--colour-tone()` to set the secondary button’s OKLCH lightness; you can
+also use `--colour-darken()` to subtract HSL lightness points.
+
+Golden-angle spacing does **not** guarantee accessible contrast.
+`--colour-contrast()` selects black or white, but does not certify WCAG compliance;
+check the final text/background combinations and UI states.
 
 Notes:
 
@@ -116,45 +142,23 @@ Notes:
 - **Contrast** picks black or white only, ignores alpha, and only sees the colour you pass in.
 - **Chromium rejects a function nested in itself**, such as `--colour-lighten(10, --colour-lighten(10, red))` ([w3c/csswg-drafts#13943](https://github.com/w3c/csswg-drafts/issues/13943)). Nesting different functions is fine.
 
-## Golden-ratio palettes
+## Golden-ratio helpers
 
-`--colour-golden(step, colour = currentColor)` rotates HSL hue by
-`137.507764° × step`, preserving saturation, lightness and alpha. Step is a
-number: zero preserves hue, negative steps rotate backwards, and fractional
-steps are supported. Hue wraps naturally.
+`--colour-golden(step, colour = currentColor)` rotates HSL hue by approximately
+137.5° per step, preserving saturation, lightness and alpha. Zero preserves hue;
+negative and fractional steps work too. Unlike `--colour-adjust-hue(degrees, colour)`,
+its amount is a count of golden-angle steps, not degrees.
 
-`--colour-scale-saturation(factor, colour = currentColor)` multiplies HSL
-saturation and clamps it to 0–100. A factor of 1 preserves saturation, 0
-removes it, and .5 halves it. Negative factors clamp to zero. This differs
-from `--colour-saturate()`, which adds percentage points.
+`--colour-scale-saturation(factor, colour = currentColor)` multiplies the original
+HSL saturation and clamps it to 0–100%. For example, 0.4 turns 100% into 40%, or
+50% into 20%. `--colour-desaturate(40, colour)` instead subtracts 40 percentage
+points (50% becomes 10%). A factor of 1 preserves saturation; 0 or a negative
+factor removes it. Alpha and lightness are preserved.
 
-Both accept CSS colours, `var()` values, optional names resolved by your
-`--colour()` function, and nested colour functions. No configuration, build
-step or JavaScript is needed for native CSS use.
-
-```css
-.palette {
-  --base: #6750a4;
-  --primary: --colour-golden(0, var(--base));
-  --secondary: --colour-golden(1, var(--base));
-  --tertiary: --colour-golden(2, var(--base));
-  --muted: --colour-scale-saturation(.25, var(--primary));
-  background: --colour-tint(85%, var(--secondary));
-  border-color: --colour-darken(10, var(--primary));
-}
-.badge {
-  background: --colour-scale-saturation(.5, --colour-golden(1));
-}
-```
-
-Golden-ratio hue rotation creates mathematically spaced colours; it does **not**
-guarantee accessible contrast. Check actual text/background combinations,
-including transparency. The compatibility compiler supports both helpers and
-nested expressions using its existing build-time workflow.
-
-The playground shows both functions as labelled swatch scales using the same
-sample colour selection as the other helpers. Composition examples show how to
-mute or tint a golden-angle hue. The demo runs entirely in CSS, with no JavaScript.
+Both accept CSS colours, custom properties and optional named colours, and compose
+with the other helpers. The Playground shows their step/factor scales; the
+[Composition example](#composition) shows the three-colour technique. Native use
+needs no build step or JavaScript; the compatibility compiler supports nested calls.
 
 ## Optional palettes
 
