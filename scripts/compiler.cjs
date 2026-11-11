@@ -15,7 +15,7 @@
  * (var(), currentColor, other literal colour spaces), results outside the
  * sRGB gamut and near-ties are never guessed.
  *
- * Scope: only the 16 library functions defined in src/colour.css are compiled.
+ * Scope: only the 18 library functions defined in src/colour.css are compiled.
  * It is NOT a general-purpose @function polyfill: any other dashed function
  * throws. Named colours are optional: pass palette CSS (for example
  * examples/material.css) via createCompiler(source, { paletteSource }).
@@ -26,6 +26,8 @@
 // Amount type of every (amount, colour = currentColor) function, with the
 // literal range accepted where the CSS would otherwise be invalid or misleading.
 const SIGNATURES = {
+  'colour-golden': { kind: 'number' },
+  'colour-scale-saturation': { kind: 'number' },
   'colour-lighten': { kind: 'number' },
   'colour-darken': { kind: 'number' },
   'colour-saturate': { kind: 'number' },
@@ -421,6 +423,8 @@ function createCompiler(colourSource, options = {}) {
     const hsl = () => toHsl(base);
     const n = amount;
     switch (name) {
+      case 'colour-golden': { const c = hsl(); return fromHsl(c.h + 137.507764 * n, c.s, c.l, base.alpha); }
+      case 'colour-scale-saturation': { const c = hsl(); return fromHsl(c.h, clamp(c.s * n, 0, 100), c.l, base.alpha); }
       case 'colour-lighten': { const c = hsl(); return fromHsl(c.h, c.s, clamp(c.l + n, 0, 100), base.alpha); }
       case 'colour-darken': { const c = hsl(); return fromHsl(c.h, c.s, clamp(c.l - n, 0, 100), base.alpha); }
       case 'colour-saturate': { const c = hsl(); return fromHsl(c.h, clamp(c.s + n, 0, 100), c.l, base.alpha); }
@@ -469,6 +473,8 @@ function createCompiler(colourSource, options = {}) {
     const b = base.css;
     const a = amount.css;
     const css = {
+      'colour-golden': `hsl(from ${b} calc(h + 137.507764 * ${a}) s l / alpha)`,
+      'colour-scale-saturation': `hsl(from ${b} h clamp(0, calc(s * ${a}), 100) l / alpha)`,
       'colour-lighten': `hsl(from ${b} h s clamp(0, calc(l + ${a}), 100) / alpha)`,
       'colour-darken': `hsl(from ${b} h s clamp(0, calc(l - ${a}), 100) / alpha)`,
       'colour-saturate': `hsl(from ${b} h clamp(0, calc(s + ${a}), 100) l / alpha)`,
