@@ -91,8 +91,8 @@ main:has(#mix-black:checked) { --mix-with: #000; --mix-name: "black"; }
 .tile[data-fn="desaturate"] i { background: --colour-desaturate(40, var(--active)); }
 .tile[data-fn="tint"] i { background: --colour-tint(50%, var(--active)); }
 .tile[data-fn="shade"] i { background: --colour-shade(40%, var(--active)); }
-.tile[data-fn="supporting"] i { background: --colour-scale-saturation(0.4, var(--active)); }
-.tile[data-fn="golden-tint"] i { background: --colour-tint(85%, --colour-golden(1, var(--active))); }
+.tile[data-fn="golden-secondary"] i { background: --colour-golden(1, var(--active)); }
+.tile[data-fn="golden-tertiary"] i { background: --colour-golden(2, var(--active)); }
 .alpha i { position: relative; background: repeating-conic-gradient(#e6e9ed 0 25%, #fff 0 50%) 0 0 / 16px 16px; }
 .alpha i::before { content: ""; position: absolute; inset: 0; border-radius: inherit; }
 .tile[data-fn="opacity"] i::before { background: --colour-opacity(0.5, var(--active)); }
